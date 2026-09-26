@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
-import { Fraunces, Manrope } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { CartProvider } from "@/components/cart-store";
 import { SiteShell } from "@/components/site-shell";
 import { site } from "@/lib/config";
@@ -8,17 +8,7 @@ import { getStorefrontProduct } from "@/lib/services/products";
 import { UNAVAILABLE_PRODUCT } from "@/lib/product-types";
 import "./globals.css";
 
-const display = Fraunces({
-  subsets: ["latin"],
-  variable: "--font-fraunces",
-  display: "swap",
-});
-
-const sans = Manrope({
-  subsets: ["latin"],
-  variable: "--font-manrope",
-  display: "swap",
-});
+const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION?.trim();
 
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
@@ -27,6 +17,11 @@ export const metadata: Metadata = {
     template: "%s · Beevo",
   },
   description: site.description,
+  applicationName: site.name,
+  authors: [{ name: site.name }],
+  creator: site.name,
+  publisher: site.name,
+  category: "shopping",
   keywords: [
     "mini thermal printer",
     "pocket printer india",
@@ -36,22 +31,39 @@ export const metadata: Metadata = {
     "beevo go",
   ],
   alternates: { canonical: "/" },
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    shortcut: ["/icon.svg"],
+  },
+  verification: googleSiteVerification
+    ? { google: googleSiteVerification }
+    : undefined,
   openGraph: {
     type: "website",
     url: site.url,
     siteName: site.name,
     title: "Beevo Go · Ink-Free Pocket Thermal Printer — ₹999 online",
     description: site.description,
-    images: [{ url: "/images/og.jpg", width: 1200, height: 630, alt: "Beevo Go mini thermal printer printing a paper strip" }],
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Beevo Go ink-free pocket thermal printer" }],
     locale: "en_IN",
   },
   twitter: {
     card: "summary_large_image",
     title: "Beevo Go · Ink-Free Pocket Thermal Printer — ₹999 online",
     description: site.description,
-    images: ["/images/og.jpg"],
+    images: ["/opengraph-image"],
   },
-  robots: { index: true, follow: true },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
 };
 
 export const viewport: Viewport = {
@@ -63,9 +75,11 @@ export const viewport: Viewport = {
 const organizationLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
+  "@id": `${site.url}/#organization`,
   name: site.name,
   url: site.url,
-  logo: `${site.url}/images/og.jpg`,
+  logo: `${site.url}/icon.svg`,
+  description: site.description,
   contactPoint: {
     "@type": "ContactPoint",
     email: site.supportEmail,
@@ -78,8 +92,10 @@ const organizationLd = {
 const websiteLd = {
   "@context": "https://schema.org",
   "@type": "WebSite",
+  "@id": `${site.url}/#website`,
   name: site.name,
   url: site.url,
+  inLanguage: "en-IN",
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
@@ -88,7 +104,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const product = (await getStorefrontProduct()) ?? UNAVAILABLE_PRODUCT;
 
   return (
-    <html lang="en" className={`${display.variable} ${sans.variable}`}>
+    <html lang="en">
       <body>
         <a href="#main" className="skip-link">
           Skip to content
@@ -104,6 +120,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         <CartProvider product={product}>
           <SiteShell>{children}</SiteShell>
         </CartProvider>
+        <Analytics />
       </body>
     </html>
   );

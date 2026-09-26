@@ -1,6 +1,6 @@
 # Beevo
 
-A single-product e-commerce store for **Beevo Go**, an ink-free pocket thermal printer, built for the Indian market: rupees stored as integer paise, ₹999 online payment via Razorpay, ₹1,299 Cash on Delivery protected by SMS OTP verification, and a full operations admin panel.
+A single-product e-commerce store for **Beevo Go**, an ink-free pocket thermal printer, built for the Indian market: rupees stored as integer paise, ₹999 online payment via Razorpay, ₹1,299 Cash on Delivery, and a full operations admin panel.
 
 This is a real store backend, not a demo. Orders, payments, refunds, inventory, email and the audit trail are all backed by PostgreSQL, and every privileged action is authenticated, authorised and logged.
 
@@ -40,7 +40,7 @@ This is a real store backend, not a demo. Orders, payments, refunds, inventory, 
 **Storefront**
 
 - Product page, cart, checkout, order success and a privacy-safe order tracker
-- ₹999 online payment (UPI, cards, netbanking, wallets) via Razorpay, or ₹1,299 Cash on Delivery after SMS OTP verification
+- ₹999 online payment (UPI, cards, netbanking, wallets) via Razorpay, or ₹1,299 Cash on Delivery
 - Contact form, FAQ and the legal pages (terms, privacy and shipping)
 - Price, stock, availability and the per-order quantity limit all come from the database — nothing commercial is hardcoded in the UI
 
@@ -148,7 +148,7 @@ You can browse the storefront with nothing but `DATABASE_URL` set. Online paymen
 | Command | What it does |
 | --- | --- |
 | `npm run dev` | Development server |
-| `npm run build` | Production build |
+| `npm run build` | Production build (does not mutate the database) |
 | `npm run start` | Serve the production build |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | `tsc --noEmit` |
@@ -167,6 +167,7 @@ Copy `.env.example` to `.env.local`. Every variable below is read by code in thi
 | --- | --- | --- | --- |
 | `DATABASE_URL` | Yes | All application data | Your PostgreSQL provider. Use the **pooled** connection string in production |
 | `NEXT_PUBLIC_SITE_URL` | Yes | Canonical URLs, sitemap, Open Graph, email links | Your public origin, no trailing slash |
+| `GOOGLE_SITE_VERIFICATION` | Optional | Google Search Console verification meta tag | Google Search Console → Settings → Ownership verification |
 | `STORE_CONTACT_EMAIL` | Yes | Support address on legal pages, fallback notification target | Your support inbox |
 | `STORE_LEGAL_NAME` | Yes | Legal pages, invoices | Your registered business name |
 | `STORE_ADDRESS` | Yes | Legal pages | Your business address |
@@ -175,10 +176,6 @@ Copy `.env.example` to `.env.local`. Every variable below is read by code in thi
 | `RAZORPAY_KEY_ID` | For online payments | Creating orders, Checkout | Razorpay → Account & Settings → API Keys |
 | `RAZORPAY_KEY_SECRET` | For online payments | Signature verification, capture, refunds | Shown once when you generate the key |
 | `RAZORPAY_WEBHOOK_SECRET` | Strongly recommended | Verifying webhook signatures | You choose it when creating the webhook |
-| `TWILIO_ACCOUNT_SID` | For COD | Twilio Verify API authentication | Twilio Console → Account dashboard |
-| `TWILIO_AUTH_TOKEN` | For COD | Twilio Verify API authentication | Twilio Console → Account dashboard |
-| `TWILIO_VERIFY_SERVICE_SID` | For COD | Sending and checking COD SMS OTPs | Twilio Console → Verify → Services |
-| `COD_OTP_TOKEN_SECRET` | For COD | Signing the one-time post-verification checkout token | Generate: `openssl rand -base64 48` |
 | `RESEND_API_KEY` | For email | All transactional email | Resend → API Keys |
 | `RESEND_FROM_EMAIL` | For email | Sender address | Must be on a domain verified in Resend |
 | `RESEND_FROM_NAME` | For email | Sender display name | e.g. `Beevo` |
@@ -292,22 +289,6 @@ Any event you did not subscribe to is acknowledged with a 200 and logged, and ne
 2. Switch to **Live Mode**, generate live API keys, and create the live webhook.
 3. Update `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` and `RAZORPAY_WEBHOOK_SECRET` in Vercel, then redeploy.
 
-### 7.4 Set up COD SMS OTP verification (Twilio Verify)
-
-COD is intentionally unavailable until this is configured. Beevo sends the OTP to the customer, asks Twilio Verify to check it, and consumes a short-lived one-time token in the same database transaction that creates the COD order. The app never stores the OTP itself.
-
-1. Sign in at <https://console.twilio.com> and complete the account's required verification/KYC steps for sending SMS to India.
-2. In the left navigation, open **Verify → Services**, then choose **Create new Service**.
-3. Name it (for example, `Beevo COD verification`) and create it. Copy the resulting **Service SID** (starts with `VA`) into `TWILIO_VERIFY_SERVICE_SID`.
-4. Open **Account Dashboard**. Copy the **Account SID** into `TWILIO_ACCOUNT_SID` and reveal/copy the **Auth Token** into `TWILIO_AUTH_TOKEN`.
-5. Configure the India sender/template and any DLT registration Twilio requests for your account. Use Twilio's approved Verify SMS template; do not put an OTP in this repository or browser code.
-6. Generate a token-signing secret locally and save it only as an environment variable:
-   ```bash
-   openssl rand -base64 48
-   ```
-   Put the output in `COD_OTP_TOKEN_SECRET`.
-7. Add all four values to the production host, redeploy, then open **/admin → Settings**. **Twilio Verify (COD mobile OTP)** must show **Configured**.
-8. Place a real test COD checkout: enter a valid Indian mobile number, choose **Cash on Delivery**, click **Send OTP**, enter the SMS code, click **Verify**, and then place the order. Reusing the same verified browser token must fail by design.
 
 ---
 
@@ -491,12 +472,12 @@ The region is already pinned to Mumbai (`bom1`) in `vercel.json`, which keeps la
 ### 12.1 Cash on Delivery
 
 1. Add stock at /admin → Inventory.
-2. On the storefront, add to cart → Checkout → fill the address → choose **Cash on Delivery** → **Send OTP** → enter the SMS code → **Verify** → Place order.
+2. On the storefront, add to cart → Checkout → fill the address → choose **Cash on Delivery** → Place order.
 3. Expected: redirect to the success page with an order number; the order appears in /admin → Orders as `confirmed`; stock drops by the quantity; an `order_confirmed` email is logged.
 
 ### 12.2 Online payment (Razorpay test mode)
 
-Use test credentials from Razorpay's docs — for example card `4111 1111 1111 1111`, any future expiry, any CVV, OTP `1234`; or UPI id `success@razorpay`.
+Use a Razorpay test payment method from Razorpay's current test-mode documentation (for example, the `success@razorpay` UPI ID).
 
 1. Choose **Pay online** at checkout.
 2. Complete the test payment.

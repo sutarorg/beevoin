@@ -13,6 +13,9 @@ import type { NextConfig } from "next";
  *   • fonts.googleapis.com / fonts.gstatic.com
  *       next/font self-hosts the font files at build time, but the stylesheet
  *       origins are allowed so a font fallback never hard-fails.
+ *   • va.vercel-scripts.com
+ *       Vercel Analytics uses this only for its development diagnostic script;
+ *       deployed projects load /_vercel/insights from the same origin.
  *
  * `'unsafe-inline'` is required for scripts because Next.js injects inline
  * bootstrap/flight payloads and Razorpay Checkout injects inline handlers.
@@ -39,8 +42,8 @@ const csp = [
   "img-src 'self' data: blob: https:",
   "font-src 'self' data: https://fonts.gstatic.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com",
-  `connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://checkout.razorpay.com${
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://va.vercel-scripts.com",
+  `connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://checkout.razorpay.com https://va.vercel-scripts.com${
     supabaseOrigin ? ` ${supabaseOrigin} ${supabaseOrigin.replace("https://", "wss://")}` : ""
   }`,
   "frame-src https://api.razorpay.com https://checkout.razorpay.com",

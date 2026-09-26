@@ -136,7 +136,6 @@ export const ADMIN_NAV: ReadonlyArray<{
   { href: "/admin", label: "Dashboard", permission: "dashboard.view" },
   { href: "/admin/orders", label: "Orders", permission: "orders.view" },
   { href: "/admin/payments", label: "Payments", permission: "payments.view" },
-  { href: "/admin/refunds", label: "Refunds", permission: "refunds.view" },
   { href: "/admin/customers", label: "Customers", permission: "customers.view" },
   { href: "/admin/product", label: "Product", permission: "product.view" },
   { href: "/admin/inventory", label: "Inventory", permission: "inventory.view" },

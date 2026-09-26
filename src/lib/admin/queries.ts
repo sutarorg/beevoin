@@ -159,7 +159,6 @@ export async function getDashboardMetrics() {
     [unreadMessages],
     [failedEmails],
     [failedWebhooks],
-    [refundTotals],
     productRow,
     recentOrders,
   ] = await Promise.all([
@@ -212,13 +211,6 @@ export async function getDashboardMetrics() {
       .where(eq(webhookEvents.processed, false)),
     db
       .select({
-        total: sql<number>`coalesce(sum(${refunds.amountInPaise}), 0)::int`,
-        value: count(),
-      })
-      .from(refunds)
-      .where(sql`${refunds.status} in ('processed','pending')`),
-    db
-      .select({
         id: products.id,
         name: products.name,
         sku: products.sku,
@@ -264,10 +256,6 @@ export async function getDashboardMetrics() {
     unreadMessages: unreadMessages?.value ?? 0,
     failedEmails: failedEmails?.value ?? 0,
     unprocessedWebhooks: failedWebhooks?.value ?? 0,
-    refunds: {
-      count: refundTotals?.value ?? 0,
-      totalInPaise: refundTotals?.total ?? 0,
-    },
     product: productRow[0] ?? null,
     recentOrders,
   };

@@ -88,7 +88,7 @@ action and route handler re-checks authorization server-side.
 ## 4. Payment transition
 
 ```
-checkout (COD)     : verified mobile OTP -> pending -> confirmed (inventory reserved once)
+checkout (COD)     : pending -> confirmed (inventory reserved once)
 checkout (online)  : pending -> payment_pending        (no inventory yet)
 payment success    : payment_pending -> confirmed      (inventory reserved once)
 ```
@@ -136,7 +136,7 @@ Whichever source arrives first wins; every later arrival is a verified no-op.
 
 New tables: `products`, `customers`, `order_items`, `payments`, `refunds`,
 `inventory_events`, `webhook_events`, `admin_users`, `admin_audit_logs`,
-`store_settings`, `cod_phone_verifications` (hashed one-time COD OTP tokens).
+`store_settings`.
 
 Additive columns on existing tables only — **no destructive change**:
 
@@ -167,7 +167,6 @@ snapshot.
 | Risk | Mitigation |
 | --- | --- |
 | Double-click checkout | 90 s dedupe window keyed on customer + total + method |
-| COD OTP replay | Signed 15-minute token is stored only as a hash and consumed once inside the order transaction |
 | Overselling the last unit | `UPDATE products SET inventory_quantity = inventory_quantity - $n WHERE id = $id AND inventory_quantity >= $n` inside a transaction, with an affected-row check |
 | Double inventory decrement | `orders.inventory_reserved_at` guard inside the same transaction |
 | Duplicate webhook | `webhook_events (provider, event_id)` UNIQUE + `processed` flag |
