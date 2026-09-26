@@ -176,10 +176,6 @@ export const FAQS: { q: string; a: string }[] = [
     a: "Write to us from the Contact page with your order ID and we'll sort it out. You can also check live status anytime using Track Order with your order ID and registered mobile number.",
   },
   {
-    q: "What is the return policy?",
-    a: `If your printer arrives damaged, defective or not as described, request a replacement or refund within ${policies.replacementWindowDays} days of delivery — details are on the Returns & Refunds page.`,
-  },
-  {
     q: `Is ${productDefaults.shortName} covered by warranty?`,
     a: `We offer a ${policies.replacementWindowDays}-day replacement promise for manufacturing defects. Reach out with your order ID and a short video of the issue and we'll take care of the rest.`,
   },

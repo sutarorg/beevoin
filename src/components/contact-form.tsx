@@ -10,7 +10,7 @@ type Errors = Record<string, string | undefined>;
 const TOPICS = [
   { value: "order", label: "About my order" },
   { value: "shipping", label: "Shipping & delivery" },
-  { value: "returns", label: "Returns & refunds" },
+  { value: "replacement", label: "Replacement support" },
   { value: "product", label: "Product question" },
   { value: "general", label: "Something else" },
 ] as const;

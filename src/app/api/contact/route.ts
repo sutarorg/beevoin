@@ -20,7 +20,7 @@ const TOPIC_LABELS: Record<string, string> = {
   general: "General enquiry",
   order: "Order help",
   shipping: "Shipping & delivery",
-  returns: "Returns & refunds",
+  replacement: "Replacement support",
   product: "Product question",
 };
 

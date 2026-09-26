@@ -8,7 +8,7 @@ import { site } from "@/lib/config";
 export const metadata: Metadata = {
   title: "Frequently asked questions",
   description:
-    "Answers about the Beevo Go mini thermal printer — setup, ink-free printing, Android and iOS compatibility, paper, charging, delivery and returns.",
+    "Answers about the Beevo Go mini thermal printer — setup, ink-free printing, Android and iOS compatibility, paper, charging and delivery.",
   alternates: { canonical: "/faq" },
 };
 
@@ -33,7 +33,7 @@ export default function FaqPage() {
         <Eyebrow>Help centre</Eyebrow>
         <SectionTitle className="mt-3">Frequently asked questions</SectionTitle>
         <p className="mt-3 text-[15px] leading-relaxed text-ink-soft">
-          Straight answers about the printer, the tech, delivery and returns.
+          Straight answers about the printer, the tech and delivery.
           Still stuck?{" "}
           <Link
             href="/contact"

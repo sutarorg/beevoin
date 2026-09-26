@@ -19,8 +19,10 @@ export type StorefrontProduct = {
   sku: string;
   description: string;
   shortDescription: string;
-  /** Integer paise — never a float. */
+  /** Online-payment price in integer paise — never a float. */
   priceInPaise: number;
+  /** Cash on Delivery price in integer paise — never a float. */
+  codPriceInPaise: number;
   currency: string;
   maxPerOrder: number;
   shippingInPaise: number;
@@ -56,6 +58,7 @@ export const UNAVAILABLE_PRODUCT: StorefrontProduct = {
   description: "",
   shortDescription: "",
   priceInPaise: 0,
+  codPriceInPaise: 0,
   currency: "INR",
   maxPerOrder: 1,
   shippingInPaise: 0,

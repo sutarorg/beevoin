@@ -113,8 +113,10 @@ export const products = pgTable(
     shortDescription: varchar("short_description", { length: 300 })
       .notNull()
       .default(""),
-    /** Integer paise. ₹1,499 === 149900. Never a float. */
+    /** Online-payment unit price in integer paise. ₹999 === 99900. */
     priceInPaise: integer("price_in_paise").notNull(),
+    /** COD unit price in integer paise. ₹1,299 === 129900. */
+    codPriceInPaise: integer("cod_price_in_paise").notNull().default(129_900),
     currency: varchar("currency", { length: 3 }).notNull().default("INR"),
     maxPerOrder: integer("max_per_order").notNull().default(5),
     shippingInPaise: integer("shipping_in_paise").notNull().default(0),
@@ -139,6 +141,7 @@ export const products = pgTable(
     uniqueIndex("products_slug_idx").on(t.slug),
     uniqueIndex("products_sku_idx").on(t.sku),
     check("products_price_positive", sql`${t.priceInPaise} > 0`),
+    check("products_cod_price_positive", sql`${t.codPriceInPaise} > 0`),
     check("products_shipping_non_negative", sql`${t.shippingInPaise} >= 0`),
     check("products_inventory_non_negative", sql`${t.inventoryQuantity} >= 0`),
     check("products_max_per_order_positive", sql`${t.maxPerOrder} > 0`),
@@ -266,6 +269,31 @@ export const orders = pgTable(
     index("orders_payment_status_idx").on(t.paymentStatus),
     index("orders_razorpay_order_idx").on(t.razorpayOrderId),
     index("orders_customer_idx").on(t.customerId),
+  ],
+);
+
+/**
+ * One-time tokens granted only after Twilio Verify approves a COD mobile OTP.
+ * We store a SHA-256 hash, never the browser token or the OTP itself. `usedAt`
+ * makes a verified phone authorization non-replayable.
+ */
+export const codPhoneVerifications = pgTable(
+  "cod_phone_verifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    phone: varchar("phone", { length: 10 }).notNull(),
+    tokenHash: varchar("token_hash", { length: 64 }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("cod_phone_verifications_token_hash_idx").on(t.tokenHash),
+    index("cod_phone_verifications_phone_idx").on(t.phone),
+    index("cod_phone_verifications_expires_idx").on(t.expiresAt),
   ],
 );
 

@@ -31,7 +31,9 @@ export function CartClient() {
   const { qty, setQty, clear, subtotalInPaise, hydrated, maxPerOrder, product } =
     useCart();
   const shippingInPaise = qty > 0 ? product.shippingInPaise : 0;
-  const totalInPaise = subtotalInPaise + shippingInPaise;
+  const onlineTotalInPaise = subtotalInPaise + shippingInPaise;
+  const codSubtotalInPaise = qty * product.codPriceInPaise;
+  const codTotalInPaise = codSubtotalInPaise + shippingInPaise;
 
   return (
     <Section className="pt-10 md:pt-14">
@@ -133,8 +135,9 @@ export function CartClient() {
                         <Plus className="size-4" aria-hidden />
                       </button>
                     </div>
-                    <p className="font-mono text-lg font-bold tabular-nums text-ink">
+                    <p className="text-right font-mono text-lg font-bold tabular-nums text-ink">
                       {formatINR(subtotalInPaise)}
+                      <span className="ml-1 block font-sans text-[11px] font-semibold text-leaf">online</span>
                     </p>
                   </div>
                 </div>
@@ -147,10 +150,18 @@ export function CartClient() {
                 Order summary
               </h2>
               <dl className="mt-4 space-y-2.5 text-[15px]">
-                <div className="flex justify-between">
-                  <dt className="font-semibold text-ink-soft">Subtotal</dt>
-                  <dd className="font-mono font-bold tabular-nums">
+                <div className="flex justify-between gap-4">
+                  <dt className="font-semibold text-ink-soft">Pay online</dt>
+                  <dd className="text-right font-mono font-bold tabular-nums">
                     {formatINR(subtotalInPaise)}
+                    <span className="ml-1 font-sans text-[11px] font-semibold text-leaf">{formatINR(product.priceInPaise)} each</span>
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="font-semibold text-ink-soft">Cash on Delivery</dt>
+                  <dd className="text-right font-mono font-bold tabular-nums">
+                    {formatINR(codSubtotalInPaise)}
+                    <span className="ml-1 font-sans text-[11px] font-semibold text-haldi">{formatINR(product.codPriceInPaise)} each</span>
                   </dd>
                 </div>
                 <div className="flex justify-between">
@@ -167,14 +178,15 @@ export function CartClient() {
                 </div>
                 <div className="dashed-rule my-2" />
                 <div className="flex items-baseline justify-between">
-                  <dt className="font-bold text-ink">Total</dt>
-                  <dd className="font-mono text-xl font-bold tabular-nums text-ink">
-                    {formatINR(totalInPaise)}
+                  <dt className="font-bold text-ink">Total at checkout</dt>
+                  <dd className="text-right font-mono text-xl font-bold tabular-nums text-ink">
+                    {formatINR(onlineTotalInPaise)} online
+                    <span className="block text-[12px] text-ink-soft">{formatINR(codTotalInPaise)} COD</span>
                   </dd>
                 </div>
               </dl>
               <p className="mt-2 text-[12.5px] font-semibold text-ink-faint">
-                Inclusive of all taxes. No hidden charges at checkout.
+                Inclusive of all taxes. Your selected payment method sets the final total.
               </p>
               <Link
                 href="/checkout"

@@ -88,7 +88,7 @@ action and route handler re-checks authorization server-side.
 ## 4. Payment transition
 
 ```
-checkout (COD)     : pending -> confirmed              (inventory reserved once)
+checkout (COD)     : verified mobile OTP -> pending -> confirmed (inventory reserved once)
 checkout (online)  : pending -> payment_pending        (no inventory yet)
 payment success    : payment_pending -> confirmed      (inventory reserved once)
 ```
@@ -136,7 +136,7 @@ Whichever source arrives first wins; every later arrival is a verified no-op.
 
 New tables: `products`, `customers`, `order_items`, `payments`, `refunds`,
 `inventory_events`, `webhook_events`, `admin_users`, `admin_audit_logs`,
-`store_settings`.
+`store_settings`, `cod_phone_verifications` (hashed one-time COD OTP tokens).
 
 Additive columns on existing tables only — **no destructive change**:
 
@@ -156,8 +156,9 @@ safe on a fresh database *and* on the existing production database that already
 contains `orders`, `order_events`, `email_logs` and `contact_messages`.
 
 `npm run db:seed` inserts the single Beevo Go product (SKU `BG-GO-01`,
-`149900` paise) and backfills existing orders into `customers` / `order_items`
-without rewriting any historical snapshot.
+`99900` paise online and `129900` paise by COD). The payment-method price is
+selected server-side at checkout, and each order keeps its immutable unit-price
+snapshot.
 
 ---
 
@@ -166,6 +167,7 @@ without rewriting any historical snapshot.
 | Risk | Mitigation |
 | --- | --- |
 | Double-click checkout | 90 s dedupe window keyed on customer + total + method |
+| COD OTP replay | Signed 15-minute token is stored only as a hash and consumed once inside the order transaction |
 | Overselling the last unit | `UPDATE products SET inventory_quantity = inventory_quantity - $n WHERE id = $id AND inventory_quantity >= $n` inside a transaction, with an affected-row check |
 | Double inventory decrement | `orders.inventory_reserved_at` guard inside the same transaction |
 | Duplicate webhook | `webhook_events (provider, event_id)` UNIQUE + `processed` flag |

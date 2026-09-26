@@ -289,21 +289,20 @@ export default async function HomePage() {
         <Container className="grid items-center gap-12 lg:grid-cols-2">
           <div className="space-y-5">
             <Eyebrow className="text-paper/60 [&>span]:bg-accent">
-              One product. One honest price.
+              Choose how you pay.
             </Eyebrow>
             <h2 className="font-display text-[1.9rem] font-semibold leading-tight tracking-tight md:text-4xl">
-              Everything you need to start printing, for{" "}
-              {formatINR(product.priceInPaise)}.
+              {formatINR(product.priceInPaise)} online. {formatINR(product.codPriceInPaise)} on COD.
             </h2>
             <p className="max-w-md text-[15px] leading-relaxed text-paper/70">
-              No fake MRPs, no countdown timers, no hidden charges at checkout.
-              Just {product.shortName}, a starter paper roll and free doorstep
-              delivery anywhere in India — with Cash on Delivery.
+              Pay online to get the best price, or choose Cash on Delivery when
+              it suits you. Every price is inclusive of taxes, with free
+              doorstep delivery anywhere in India.
             </p>
             <ul className="space-y-2.5 pt-1 text-sm font-bold text-paper/85">
               {[
                 "Free shipping to every serviceable pincode",
-                "Pay online securely, or by cash / UPI on delivery",
+                `Pay online: ${formatINR(product.priceInPaise)} · COD: ${formatINR(product.codPriceInPaise)}`,
                 "7-day replacement promise for defects",
               ].map((line) => (
                 <li key={line} className="flex items-center gap-2.5">
@@ -326,7 +325,13 @@ export default async function HomePage() {
                     {product.shortName} × 1<span className="block text-xs text-ink-faint">Ink-free pocket printer</span>
                   </span>
                   <span className="font-bold tabular-nums">
-                    {formatINR(product.priceInPaise)}
+                    {formatINR(product.priceInPaise)} online
+                  </span>
+                </p>
+                <p className="flex justify-between gap-4">
+                  <span>Cash on Delivery × 1<span className="block text-xs text-ink-faint">Mobile OTP verification required</span></span>
+                  <span className="font-bold tabular-nums">
+                    {formatINR(product.codPriceInPaise)}
                   </span>
                 </p>
                 <p className="flex justify-between gap-4">
@@ -354,7 +359,7 @@ export default async function HomePage() {
                   Total
                 </span>
                 <span className="font-display text-3xl font-bold tabular-nums">
-                  {formatINR(product.priceInPaise + product.shippingInPaise)}
+                  {formatINR(product.priceInPaise + product.shippingInPaise)} online
                 </span>
               </p>
               <Link
@@ -362,7 +367,7 @@ export default async function HomePage() {
                 className={buttonClasses({ className: "mt-6 w-full", size: "lg" })}
               >
                 <Zap className="size-4.5" aria-hidden />
-                Buy now — {formatINR(product.priceInPaise)}
+                Buy online — {formatINR(product.priceInPaise)}
               </Link>
               <p className="mt-3.5 flex items-center justify-center gap-1.5 text-center text-[12px] font-semibold text-ink-faint">
                 <Lock className="size-3.5" aria-hidden />
@@ -458,7 +463,7 @@ export default async function HomePage() {
               {
                 icon: Undo2,
                 title: "7-day replacement",
-                body: "Damaged, defective or not-as-described? We'll replace it or refund you within 7 days of delivery.",
+                body: "Damaged, defective or not-as-described? Contact us within 7 days of delivery for replacement support.",
               },
               {
                 icon: Mail,
@@ -487,8 +492,7 @@ export default async function HomePage() {
             <Eyebrow>Good questions</Eyebrow>
             <SectionTitle>Everything people ask before buying</SectionTitle>
             <p className="text-[14.5px] leading-relaxed text-ink-soft">
-              Honest answers about printing, compatibility, charging, delivery
-              and returns.{" "}
+              Honest answers about printing, compatibility, charging and delivery.{" "}
               <Link
                 href="/faq"
                 className="font-bold text-accent-deep underline-offset-4 hover:underline"

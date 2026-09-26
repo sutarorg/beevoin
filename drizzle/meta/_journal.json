@@ -15,6 +15,13 @@
       "when": 1758844800001,
       "tag": "0001_production_upgrade",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790380800000,
+      "tag": "0002_cod_pricing_and_phone_verification",
+      "breakpoints": true
     }
   ]
 }

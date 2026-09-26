@@ -52,6 +52,7 @@ async function main() {
         description: productDefaults.description,
         shortDescription: productDefaults.shortDescription,
         priceInPaise: productDefaults.priceInPaise,
+        codPriceInPaise: productDefaults.codPriceInPaise,
         currency: productDefaults.currency,
         shippingInPaise: productDefaults.shippingInPaise,
         maxPerOrder: productDefaults.maxPerOrder,
@@ -74,7 +75,9 @@ async function main() {
     process.stdout.write(
       `Created product "${productDefaults.slug}" at ₹${(
         productDefaults.priceInPaise / 100
-      ).toFixed(2)} with 0 units in stock.\n`,
+      ).toFixed(2)} online / ₹${(
+        productDefaults.codPriceInPaise / 100
+      ).toFixed(2)} COD with 0 units in stock.\n`,
     );
   }
 

@@ -43,7 +43,7 @@ export default function PrivacyPage() {
             <L
               items={[
                 "To process, confirm and deliver your order.",
-                "To send transactional updates about your order (confirmation, shipping, delivery, refund) by email.",
+                "To send transactional updates about your order (confirmation, shipping and delivery) by email.",
                 "To verify your identity when you look up an order.",
                 "To respond to your support requests.",
                 "To meet our legal, tax and accounting obligations.",

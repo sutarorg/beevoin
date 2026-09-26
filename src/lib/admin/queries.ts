@@ -223,6 +223,7 @@ export async function getDashboardMetrics() {
         name: products.name,
         sku: products.sku,
         priceInPaise: products.priceInPaise,
+        codPriceInPaise: products.codPriceInPaise,
         inventoryQuantity: products.inventoryQuantity,
         lowStockThreshold: products.lowStockThreshold,
         active: products.active,

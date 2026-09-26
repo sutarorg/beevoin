@@ -26,6 +26,7 @@ import {
 } from "./services/inventory";
 import { upsertCustomerForOrder } from "./services/customers";
 import { invalidateProductCache } from "./services/products";
+import { consumeCodVerification } from "./cod-otp";
 
 function makeOrderNumber(): string {
   const now = new Date();
@@ -62,17 +63,20 @@ export type NewOrderResult = {
  * row — client-supplied prices, currencies and totals are never read.
  *
  * COD orders go straight to `confirmed` and reserve inventory inside the same
- * transaction. Online orders start at `pending`; inventory is only consumed
- * once the payment is verified.
+ * transaction, but only after consuming the one-time phone-verification token.
+ * Online orders start at `pending`; inventory is only consumed once payment is
+ * verified.
  */
 export async function createOrder(input: {
   customer: CheckoutCustomer;
   quantity: number;
   paymentMethod: PaymentMethod;
   product: Product;
+  codVerification?: { tokenHash: string };
 }): Promise<NewOrderResult> {
-  const { customer, quantity, paymentMethod, product } = input;
-  const unit = product.priceInPaise;
+  const { customer, quantity, paymentMethod, product, codVerification } = input;
+  const unit =
+    paymentMethod === "cod" ? product.codPriceInPaise : product.priceInPaise;
   const total = unit * quantity + product.shippingInPaise;
   const email = customer.email.toLowerCase();
 
@@ -110,6 +114,16 @@ export async function createOrder(input: {
           orderTotalInPaise: total,
           placedAt,
         });
+
+        if (isCod) {
+          if (!codVerification) {
+            throw new Error("COD phone verification is required.");
+          }
+          await consumeCodVerification(tx, {
+            phone: customer.phone,
+            tokenHash: codVerification.tokenHash,
+          });
+        }
 
         const [created] = await tx
           .insert(orders)

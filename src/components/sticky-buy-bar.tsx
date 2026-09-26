@@ -59,7 +59,7 @@ export function StickyBuyBar() {
             {product.shortName} Mini Printer
           </p>
           <p className="font-mono text-[15px] font-bold text-ink">
-            {formatINR(product.priceInPaise)}
+            {formatINR(product.priceInPaise)} online
             {product.shippingInPaise === 0 ? (
               <span className="ml-1.5 font-sans text-[11px] font-semibold text-leaf">
                 Free shipping

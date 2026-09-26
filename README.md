@@ -1,6 +1,6 @@
 # Beevo
 
-A single-product e-commerce store for **Beevo Go**, an ink-free pocket thermal printer, built for the Indian market: rupees stored as integer paise, Cash on Delivery alongside Razorpay, and a full operations admin panel.
+A single-product e-commerce store for **Beevo Go**, an ink-free pocket thermal printer, built for the Indian market: rupees stored as integer paise, ₹999 online payment via Razorpay, ₹1,299 Cash on Delivery protected by SMS OTP verification, and a full operations admin panel.
 
 This is a real store backend, not a demo. Orders, payments, refunds, inventory, email and the audit trail are all backed by PostgreSQL, and every privileged action is authenticated, authorised and logged.
 
@@ -40,8 +40,8 @@ This is a real store backend, not a demo. Orders, payments, refunds, inventory, 
 **Storefront**
 
 - Product page, cart, checkout, order success and a privacy-safe order tracker
-- Cash on Delivery and online payment (UPI, cards, netbanking, wallets) via Razorpay
-- Contact form, FAQ and the legal pages (terms, privacy, shipping, returns)
+- ₹999 online payment (UPI, cards, netbanking, wallets) via Razorpay, or ₹1,299 Cash on Delivery after SMS OTP verification
+- Contact form, FAQ and the legal pages (terms, privacy and shipping)
 - Price, stock, availability and the per-order quantity limit all come from the database — nothing commercial is hardcoded in the UI
 
 **Admin panel** (`/admin`)
@@ -89,7 +89,7 @@ Admin (/admin)
 Two rules shape the whole codebase:
 
 1. **Supabase is identity only.** Application data never leaves PostgreSQL/Drizzle. There is no `supabase.from(...)` anywhere.
-2. **The database is authoritative.** Price, shipping, stock, active state and max-per-order are read from the `products` row at checkout time, every time. The storefront's cached copy is for rendering only.
+2. **The database is authoritative.** Online price, COD price, shipping, stock, active state and max-per-order are read from the `products` row at checkout time, every time. The storefront's cached copy is for rendering only.
 
 For the detailed design — status machine, concurrency strategy, idempotency keys — see [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
@@ -175,6 +175,10 @@ Copy `.env.example` to `.env.local`. Every variable below is read by code in thi
 | `RAZORPAY_KEY_ID` | For online payments | Creating orders, Checkout | Razorpay → Account & Settings → API Keys |
 | `RAZORPAY_KEY_SECRET` | For online payments | Signature verification, capture, refunds | Shown once when you generate the key |
 | `RAZORPAY_WEBHOOK_SECRET` | Strongly recommended | Verifying webhook signatures | You choose it when creating the webhook |
+| `TWILIO_ACCOUNT_SID` | For COD | Twilio Verify API authentication | Twilio Console → Account dashboard |
+| `TWILIO_AUTH_TOKEN` | For COD | Twilio Verify API authentication | Twilio Console → Account dashboard |
+| `TWILIO_VERIFY_SERVICE_SID` | For COD | Sending and checking COD SMS OTPs | Twilio Console → Verify → Services |
+| `COD_OTP_TOKEN_SECRET` | For COD | Signing the one-time post-verification checkout token | Generate: `openssl rand -base64 48` |
 | `RESEND_API_KEY` | For email | All transactional email | Resend → API Keys |
 | `RESEND_FROM_EMAIL` | For email | Sender address | Must be on a domain verified in Resend |
 | `RESEND_FROM_NAME` | For email | Sender display name | e.g. `Beevo` |
@@ -287,6 +291,23 @@ Any event you did not subscribe to is acknowledged with a 200 and logged, and ne
 1. Complete KYC in the Razorpay dashboard.
 2. Switch to **Live Mode**, generate live API keys, and create the live webhook.
 3. Update `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` and `RAZORPAY_WEBHOOK_SECRET` in Vercel, then redeploy.
+
+### 7.4 Set up COD SMS OTP verification (Twilio Verify)
+
+COD is intentionally unavailable until this is configured. Beevo sends the OTP to the customer, asks Twilio Verify to check it, and consumes a short-lived one-time token in the same database transaction that creates the COD order. The app never stores the OTP itself.
+
+1. Sign in at <https://console.twilio.com> and complete the account's required verification/KYC steps for sending SMS to India.
+2. In the left navigation, open **Verify → Services**, then choose **Create new Service**.
+3. Name it (for example, `Beevo COD verification`) and create it. Copy the resulting **Service SID** (starts with `VA`) into `TWILIO_VERIFY_SERVICE_SID`.
+4. Open **Account Dashboard**. Copy the **Account SID** into `TWILIO_ACCOUNT_SID` and reveal/copy the **Auth Token** into `TWILIO_AUTH_TOKEN`.
+5. Configure the India sender/template and any DLT registration Twilio requests for your account. Use Twilio's approved Verify SMS template; do not put an OTP in this repository or browser code.
+6. Generate a token-signing secret locally and save it only as an environment variable:
+   ```bash
+   openssl rand -base64 48
+   ```
+   Put the output in `COD_OTP_TOKEN_SECRET`.
+7. Add all four values to the production host, redeploy, then open **/admin → Settings**. **Twilio Verify (COD mobile OTP)** must show **Configured**.
+8. Place a real test COD checkout: enter a valid Indian mobile number, choose **Cash on Delivery**, click **Send OTP**, enter the SMS code, click **Verify**, and then place the order. Reusing the same verified browser token must fail by design.
 
 ---
 
@@ -470,7 +491,7 @@ The region is already pinned to Mumbai (`bom1`) in `vercel.json`, which keeps la
 ### 12.1 Cash on Delivery
 
 1. Add stock at /admin → Inventory.
-2. On the storefront, add to cart → Checkout → fill the address → choose **Cash on Delivery** → Place order.
+2. On the storefront, add to cart → Checkout → fill the address → choose **Cash on Delivery** → **Send OTP** → enter the SMS code → **Verify** → Place order.
 3. Expected: redirect to the success page with an order number; the order appears in /admin → Orders as `confirmed`; stock drops by the quantity; an `order_confirmed` email is logged.
 
 ### 12.2 Online payment (Razorpay test mode)
@@ -543,7 +564,7 @@ npm run build
 - **Signature verification uses constant-time comparison** (`crypto.timingSafeEqual`) for both the checkout callback and the webhook.
 - **The webhook reads the raw request body** and verifies the HMAC **before** parsing any JSON. A forged body cannot reach the parser.
 - **Idempotency everywhere**: unique `(provider, event_id)` on webhook deliveries, unique provider payment and refund IDs, unique email `event_key`, and one-shot inventory reservation/release timestamps.
-- **Money is integer paise.** No floats touch a price. ₹1,499 is `149900`.
+- **Money is integer paise.** No floats touch a price. ₹999 online is `99900`; ₹1,299 COD is `129900`.
 - **Admin authorisation is re-checked on every request** — the proxy only refreshes cookies; it never authorises. A suspended admin loses access on their next request, with no session to wait out.
 - **CSRF**: same-origin checks on browser-facing POST endpoints. The webhook is deliberately exempt (it is server-to-server and authenticated by HMAC instead).
 - **Order lookup requires two factors** — the order number plus the registered phone, registered email, or the un-guessable lookup secret — and returns a masked, address-free summary.

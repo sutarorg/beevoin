@@ -147,7 +147,9 @@ async function main() {
         name: sample.name,
         totalOrders: 1,
         totalSpentInPaise:
-          product.priceInPaise * sample.quantity + product.shippingInPaise,
+          (sample.method === "cod" ? product.codPriceInPaise : product.priceInPaise) *
+            sample.quantity +
+          product.shippingInPaise,
         lastOrderAt: new Date(),
       })
       .onConflictDoUpdate({
@@ -156,8 +158,9 @@ async function main() {
       })
       .returning({ id: customers.id });
 
-    const total =
-      product.priceInPaise * sample.quantity + product.shippingInPaise;
+    const unitPriceInPaise =
+      sample.method === "cod" ? product.codPriceInPaise : product.priceInPaise;
+    const total = unitPriceInPaise * sample.quantity + product.shippingInPaise;
 
     const [order] = await db
       .insert(orders)
@@ -177,7 +180,7 @@ async function main() {
         productName: product.name,
         productSku: product.sku,
         quantity: sample.quantity,
-        unitPriceInPaise: product.priceInPaise,
+        unitPriceInPaise,
         shippingInPaise: product.shippingInPaise,
         totalInPaise: total,
         paymentMethod: sample.method,
@@ -197,9 +200,9 @@ async function main() {
       productId: product.id,
       productNameSnapshot: product.name,
       skuSnapshot: product.sku,
-      unitPriceInPaise: product.priceInPaise,
+      unitPriceInPaise,
       quantity: sample.quantity,
-      totalInPaise: product.priceInPaise * sample.quantity,
+      totalInPaise: unitPriceInPaise * sample.quantity,
     });
 
     await db.insert(orderEvents).values({

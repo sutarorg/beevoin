@@ -27,7 +27,7 @@ export const site = {
   url: siteUrl,
   tagline: "Little prints. Zero ink.",
   description:
-    "Beevo Go is a pocket-size Bluetooth thermal printer that prints notes, labels, lists and QR codes from your phone — completely ink-free. ₹1,499 with free shipping across India.",
+    "Beevo Go is a pocket-size Bluetooth thermal printer that prints notes, labels, lists and QR codes from your phone — completely ink-free. ₹999 online or ₹1,299 with Cash on Delivery, with free shipping across India.",
   supportEmail: process.env.STORE_CONTACT_EMAIL ?? "support@beevo.in",
   supportHours: "Mon–Sat, 10:00–18:00 IST",
   // Physical/business address supplied via environment for legal pages.
@@ -42,8 +42,13 @@ export const policies = {
 } as const;
 
 export const payments = {
-  /** Cash on Delivery is always available. */
-  cod: true,
+  /** COD becomes available only after its required SMS verification is configured. */
+  cod: Boolean(
+    process.env.TWILIO_ACCOUNT_SID &&
+      process.env.TWILIO_AUTH_TOKEN &&
+      process.env.TWILIO_VERIFY_SERVICE_SID &&
+      (process.env.COD_OTP_TOKEN_SECRET?.length ?? 0) >= 32,
+  ),
   /** Online payments via Razorpay — enabled only when API keys are configured. */
   razorpayEnabled: Boolean(
     process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET,
@@ -77,8 +82,10 @@ export const productDefaults = {
   sku: "BG-GO-01",
   name: "Beevo Go Mini Thermal Printer",
   shortName: "Beevo Go",
-  /** ₹1,499 in integer paise. */
-  priceInPaise: 149_900,
+  /** ₹999 online in integer paise. */
+  priceInPaise: 99_900,
+  /** ₹1,299 by Cash on Delivery in integer paise. */
+  codPriceInPaise: 129_900,
   currency: "INR",
   maxPerOrder: 5,
   shippingInPaise: 0,
