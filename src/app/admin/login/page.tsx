@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AdminLoginForm } from "@/components/admin-login-form";
-import { isAdmin } from "@/lib/admin-auth";
+import { getAdminAuth } from "@/lib/auth/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +11,10 @@ export const metadata: Metadata = {
 };
 
 export default async function AdminLoginPage() {
-  if (await isAdmin()) redirect("/admin");
+  const auth = await getAdminAuth();
+  if (auth.state === "ok") redirect("/admin");
+  if (auth.state === "not_admin" || auth.state === "suspended") {
+    redirect("/admin/no-access");
+  }
   return <AdminLoginForm />;
 }

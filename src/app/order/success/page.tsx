@@ -17,7 +17,7 @@ import {
 import { getOrderByNumber, getOrderEvents } from "@/lib/orders";
 import { orderNumberRegex } from "@/lib/validations";
 import { formatDateTime, formatINR } from "@/lib/format";
-import { policies } from "@/lib/config";
+import { getStoreSettings } from "@/lib/settings";
 
 export const dynamic = "force-dynamic";
 
@@ -32,6 +32,7 @@ export default async function OrderSuccessPage({
   searchParams: Promise<{ order?: string; key?: string }>;
 }) {
   const { order: orderNumber, key } = await searchParams;
+  const settings = await getStoreSettings();
 
   const order =
     orderNumber && key && orderNumberRegex.test(orderNumber)
@@ -171,8 +172,8 @@ export default async function OrderSuccessPage({
               </p>
               <p className="mt-4 flex items-center gap-2 rounded-xl bg-cream/70 p-3 text-[13px] font-bold text-ink-soft">
                 <Truck className="size-4.5 shrink-0 text-leaf" aria-hidden />
-                Dispatch in {policies.dispatchWindow} · delivery in{" "}
-                {policies.deliveryEstimate}.
+                Dispatch in {settings.dispatchWindow} · delivery in{" "}
+                {settings.deliveryEstimate}.
               </p>
             </Card>
           </div>

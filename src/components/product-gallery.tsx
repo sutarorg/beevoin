@@ -1,9 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, Expand, X } from "lucide-react";
 import { cn } from "@/lib/cn";
+import { ProductPhoto } from "./product-photo";
 
 export type GalleryImage = { src: string; alt: string };
 
@@ -46,14 +46,12 @@ export function ProductGallery({ images }: { images: readonly GalleryImage[] }) 
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-        <Image
+        <ProductPhoto
           key={current.src}
           src={current.src}
           alt={current.alt}
-          fill
           priority={index === 0}
           sizes="(max-width: 768px) 100vw, 560px"
-          className="fade-up object-cover"
         />
         <button
           type="button"
@@ -118,13 +116,7 @@ export function ProductGallery({ images }: { images: readonly GalleryImage[] }) 
                 : "border-sandline hover:border-ink-faint",
             )}
           >
-            <Image
-              src={img.src}
-              alt=""
-              fill
-              sizes="72px"
-              className="object-cover"
-            />
+            <ProductPhoto src={img.src} alt="" sizes="72px" compact />
           </button>
         ))}
       </div>
@@ -138,12 +130,10 @@ export function ProductGallery({ images }: { images: readonly GalleryImage[] }) 
       >
         <div className="relative flex h-full w-full flex-col items-center justify-center gap-4">
           <div className="relative aspect-square w-full max-w-140 overflow-hidden rounded-2xl bg-white">
-            <Image
+            <ProductPhoto
               src={current.src}
               alt={current.alt}
-              fill
               sizes="(max-width: 768px) 100vw, 560px"
-              className="object-cover"
             />
           </div>
           <div className="flex items-center gap-3">

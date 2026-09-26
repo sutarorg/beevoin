@@ -1,38 +1,34 @@
 import { z } from "zod";
+import { getOrderByNumber } from "@/lib/orders";
+import { reconcileRazorpayPayment } from "@/lib/payments/reconcile";
 import {
-  getOrderByNumber,
-  markOrderPaid,
-  markOrderPaymentFailed,
-} from "@/lib/orders";
-import { sendOrderEmail } from "@/lib/email/send";
-import {
-  fetchPayment,
   isRazorpayConfigured,
   verifyPaymentSignature,
 } from "@/lib/payments/razorpay";
-import {
-  getClientIp,
-  isSameOrigin,
-  jsonError,
-  jsonOk,
-  logEvent,
-  readJson,
-} from "@/lib/http";
+import { getClientIp, isSameOrigin, jsonError, jsonOk, readJson } from "@/lib/http";
+import { logEvent } from "@/lib/logger";
 import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const verifySchema = z.object({
-  orderNumber: z.string().min(6).max(20),
-  razorpay_order_id: z.string().min(6).max(60),
-  razorpay_payment_id: z.string().min(6).max(60),
-  razorpay_signature: z.string().min(10).max(200),
+  orderNumber: z.string().trim().min(6).max(20),
+  razorpay_order_id: z.string().trim().min(6).max(60),
+  razorpay_payment_id: z.string().trim().min(6).max(60),
+  razorpay_signature: z.string().trim().min(10).max(200),
 });
 
 /**
- * Server-side payment verification. The client's "payment succeeded" signal
- * is never trusted — we re-verify the HMAC signature and then confirm the
- * payment's status/amount directly with Razorpay before marking paid.
+ * Browser payment callback.
+ *
+ * The client's "payment succeeded" signal is never trusted:
+ *   1. the HMAC signature is verified,
+ *   2. the Razorpay order id must match the one WE stored for this order,
+ *   3. the payment is then re-fetched from Razorpay and reconciled
+ *      server-side (amount, currency, capture state, single consumption).
+ *
+ * Duplicate calls are idempotent — the second one just reports the state.
  */
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) return jsonError(403, "Invalid request origin.");
@@ -45,74 +41,62 @@ export async function POST(request: Request) {
   const body = await readJson(request);
   const parsed = verifySchema.safeParse(body);
   if (!parsed.success) return jsonError(400, "Malformed verification request.");
-
   const input = parsed.data;
 
-  try {
-    const order = await getOrderByNumber(input.orderNumber);
-    if (!order) return jsonError(404, "Order not found.");
+  const order = await getOrderByNumber(input.orderNumber);
+  if (!order) return jsonError(404, "Order not found.");
 
-    // Idempotency: a duplicate verification of the same paid payment is a no-op.
-    if (
-      order.paymentStatus === "paid" &&
-      order.razorpayPaymentId === input.razorpay_payment_id
-    ) {
-      return jsonOk({
-        redirect: `/order/success?order=${order.orderNumber}&key=${order.lookupSecret}`,
-        duplicate: true,
-      });
-    }
+  // The trusted Razorpay order id is the one stored on our order.
+  if (order.razorpayOrderId && order.razorpayOrderId !== input.razorpay_order_id) {
+    return jsonError(400, "Payment does not match this order.");
+  }
 
-    if (
-      order.razorpayOrderId &&
-      order.razorpayOrderId !== input.razorpay_order_id
-    ) {
-      return jsonError(400, "Payment does not match this order.");
-    }
-
-    // 1) Signature check.
-    const signatureOk = verifyPaymentSignature({
+  if (
+    !verifyPaymentSignature({
       razorpayOrderId: input.razorpay_order_id,
       razorpayPaymentId: input.razorpay_payment_id,
       signature: input.razorpay_signature,
+    })
+  ) {
+    logEvent("payment_failed", {
+      reason: "signature_mismatch",
+      orderNumber: order.orderNumber,
     });
-    if (!signatureOk) {
-      logEvent("payment_signature_mismatch", { orderNumber: order.orderNumber });
-      if (order.paymentStatus === "pending") {
-        await markOrderPaymentFailed(order);
-      }
-      return jsonError(400, "Payment verification failed. No amount was confirmed.");
-    }
+    return jsonError(400, "Payment verification failed. No amount was confirmed.");
+  }
 
-    // 2) Confirm status + amount with Razorpay directly.
-    const payment = await fetchPayment(input.razorpay_payment_id);
-    const amountMatches = payment.amount === order.totalInPaise;
-    const statusOk = payment.status === "captured" || payment.status === "authorized";
+  const outcome = await reconcileRazorpayPayment({
+    source: "callback",
+    razorpayPaymentId: input.razorpay_payment_id,
+    razorpayOrderId: input.razorpay_order_id,
+    expectedOrderNumber: order.orderNumber,
+  });
 
-    if (!statusOk || !amountMatches || payment.currency !== "INR") {
-      logEvent("payment_state_invalid", {
+  const redirect = `/order/success?order=${order.orderNumber}&key=${order.lookupSecret}`;
+
+  switch (outcome.state) {
+    case "paid":
+      logEvent("payment_verified", {
         orderNumber: order.orderNumber,
-        status: payment.status,
-        amountMatches,
+        firstConfirmation: outcome.firstConfirmation,
       });
-      if (order.paymentStatus === "pending") await markOrderPaymentFailed(order);
+      return jsonOk({ redirect, duplicate: !outcome.firstConfirmation });
+    case "pending":
+      return jsonOk({
+        redirect,
+        pending: true,
+        message:
+          "Your payment is being confirmed by the bank. We'll email you as soon as it clears.",
+      });
+    case "failed":
       return jsonError(
         400,
-        "Payment could not be confirmed. If money was deducted it will be auto-refunded; contact support with your order ID.",
+        "The payment did not go through. If any amount was deducted it will be reversed automatically.",
       );
-    }
-
-    const updated = await markOrderPaid(order, input.razorpay_payment_id);
-    logEvent("payment_paid", { orderNumber: order.orderNumber });
-    await sendOrderEmail(updated, "payment_received");
-
-    return jsonOk({
-      redirect: `/order/success?order=${order.orderNumber}&key=${order.lookupSecret}`,
-    });
-  } catch (err) {
-    logEvent("verify_error", {
-      error: err instanceof Error ? err.message : "unknown",
-    });
-    return jsonError(500, "Verification error. Please contact support with your order ID.");
+    default:
+      return jsonError(
+        400,
+        "Payment could not be confirmed. Please contact support with your order ID.",
+      );
   }
 }

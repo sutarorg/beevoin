@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -13,10 +12,10 @@ import {
   Truck,
   Undo2,
 } from "lucide-react";
-import { product, policies } from "@/lib/config";
 import { formatINR } from "@/lib/format";
-import { useCart } from "./cart-store";
+import { useCart, useProduct } from "./cart-store";
 import { Badge, Card, Container, Section, buttonClasses } from "./ui";
+import { ProductPhoto } from "./product-photo";
 
 function CartSkeleton() {
   return (
@@ -27,9 +26,16 @@ function CartSkeleton() {
   );
 }
 
-export function CartClient() {
+export function CartClient({
+  deliveryEstimate,
+  replacementWindowDays,
+}: {
+  deliveryEstimate: string;
+  replacementWindowDays: number;
+}) {
   const { qty, setQty, clear, subtotalInPaise, hydrated, maxPerOrder } =
     useCart();
+  const product = useProduct();
 
   return (
     <Section className="pt-10 md:pt-14">
@@ -57,7 +63,7 @@ export function CartClient() {
               </p>
             </div>
             <Link href="/" className={buttonClasses({ size: "lg" })}>
-              Meet the {product.shortName}
+              Meet the {product?.shortName ?? "Beevo Go"}
               <ArrowRight className="size-4.5" aria-hidden />
             </Link>
           </Card>
@@ -70,12 +76,11 @@ export function CartClient() {
                   href="/"
                   className="relative size-22 shrink-0 overflow-hidden rounded-xl border border-sandline sm:size-26"
                 >
-                  <Image
-                    src={product.images[0].src}
-                    alt={product.name}
-                    fill
+                  <ProductPhoto
+                    src={product?.images[0]?.src ?? "/images/product-1.jpg"}
+                    alt={product?.name ?? ""}
                     sizes="104px"
-                    className="object-cover"
+                    compact
                   />
                 </Link>
                 <div className="min-w-0 flex-1">
@@ -85,17 +90,17 @@ export function CartClient() {
                         href="/"
                         className="text-[15.5px] font-extrabold text-ink hover:underline"
                       >
-                        {product.name}
+                        {product?.name}
                       </Link>
                       <p className="mt-0.5 text-[13px] font-semibold text-ink-faint">
-                        Ink-free pocket printer · SKU {product.sku}
+                        Ink-free pocket printer · SKU {product?.sku}
                       </p>
                     </div>
                     <button
                       type="button"
                       onClick={clear}
                       className="rounded-full p-2 text-ink-faint transition-colors hover:bg-chili-soft hover:text-chili"
-                      aria-label={`Remove ${product.name} from cart`}
+                      aria-label={`Remove ${product?.name ?? "item"} from cart`}
                     >
                       <Trash2 className="size-4.5" aria-hidden />
                     </button>
@@ -176,7 +181,7 @@ export function CartClient() {
               <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-[12.5px] font-bold text-ink-soft">
                 <span className="inline-flex items-center gap-1.5">
                   <Truck className="size-4 text-leaf" aria-hidden />
-                  {policies.deliveryEstimate}
+                  {deliveryEstimate}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <HandCoins className="size-4 text-leaf" aria-hidden />
@@ -184,7 +189,7 @@ export function CartClient() {
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <Undo2 className="size-4 text-leaf" aria-hidden />
-                  7-day replacement
+                  {replacementWindowDays}-day replacement
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <ShieldCheck className="size-4 text-leaf" aria-hidden />

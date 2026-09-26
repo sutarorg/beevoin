@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { CartClient } from "@/components/cart-client";
+import { getStoreSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Your cart",
@@ -7,6 +8,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function CartPage() {
-  return <CartClient />;
+export default async function CartPage() {
+  const settings = await getStoreSettings();
+  return (
+    <CartClient
+      deliveryEstimate={settings.deliveryEstimate}
+      replacementWindowDays={settings.replacementWindowDays}
+    />
+  );
 }

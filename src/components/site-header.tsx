@@ -36,9 +36,13 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
-  useEffect(() => {
+  // Close the mobile menu when the route changes. Adjusting state during
+  // render (rather than in an effect) avoids a second render pass.
+  const [lastPath, setLastPath] = useState(pathname);
+  if (lastPath !== pathname) {
+    setLastPath(pathname);
     setOpen(false);
-  }, [pathname]);
+  }
 
   return (
     <header className="sticky top-0 z-50 border-b border-sandline/70 bg-paper/90 backdrop-blur-md">

@@ -5,6 +5,7 @@ import { CartProvider } from "@/components/cart-store";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { site } from "@/lib/config";
+import { getStorefrontProduct } from "@/lib/product";
 import "./globals.css";
 
 const display = Fraunces({
@@ -81,7 +82,15 @@ const websiteLd = {
   url: site.url,
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  // The live catalogue row is read once per request and shared with every
+  // client component through the cart context — nothing is hardcoded.
+  const product = await getStorefrontProduct();
+
   return (
     <html lang="en" className={`${display.variable} ${sans.variable}`}>
       <body>
@@ -96,7 +105,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteLd) }}
         />
-        <CartProvider>
+        <CartProvider product={product}>
           <SiteHeader />
           <main id="main">{children}</main>
           <SiteFooter />

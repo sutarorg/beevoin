@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Mail, PackageSearch, Timer } from "lucide-react";
 import { ContactForm } from "@/components/contact-form";
 import { Card, Container, Section } from "@/components/ui";
-import { policies, site } from "@/lib/config";
+import { getStoreSettings } from "@/lib/settings";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -12,7 +12,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/contact" },
 };
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const settings = await getStoreSettings();
+
   return (
     <Section className="pt-10 md:pt-14">
       <Container className="max-w-5xl">
@@ -36,14 +38,14 @@ export default function ContactPage() {
                 Email us directly
               </h2>
               <a
-                href={`mailto:${site.supportEmail}`}
+                href={`mailto:${settings.supportEmail}`}
                 className="mt-2 block font-mono text-[15px] font-bold text-accent-deep hover:underline"
               >
-                {site.supportEmail}
+                {settings.supportEmail}
               </a>
               <p className="mt-2 flex items-center gap-1.5 text-[13px] font-semibold text-ink-faint">
                 <Timer className="size-3.5" aria-hidden />
-                {site.supportHours} · replies within one business day
+                {settings.supportHours} · replies within one business day
               </p>
             </Card>
             <Card className="p-6">
@@ -61,7 +63,7 @@ export default function ContactPage() {
                 </li>
                 <li>
                   Damaged or defective unit? Request a replacement within{" "}
-                  {policies.replacementWindowDays} days of delivery — keep your
+                  {settings.replacementWindowDays} days of delivery — keep your
                   order ID and a short video of the issue handy.
                 </li>
                 <li>

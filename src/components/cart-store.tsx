@@ -11,12 +11,14 @@ import {
   type ReactNode,
 } from "react";
 import { CheckCircle2 } from "lucide-react";
-import { product } from "@/lib/config";
+import type { ProductView } from "@/lib/product-view";
 import { formatINR } from "@/lib/format";
 
 const STORAGE_KEY = "beevo-cart-v1";
 
 type CartState = {
+  /** The live catalogue row, fetched on the server. Null = nothing on sale. */
+  product: ProductView | null;
   /** Quantity of the single product (0 = empty). */
   qty: number;
   subtotalInPaise: number;
@@ -29,10 +31,19 @@ type CartState = {
 
 const CartContext = createContext<CartState | null>(null);
 
-const clampQty = (qty: number) =>
-  Math.min(Math.max(Math.round(qty) || 0, 0), product.maxPerOrder);
+export function CartProvider({
+  product,
+  children,
+}: {
+  product: ProductView | null;
+  children: ReactNode;
+}) {
+  const maxPerOrder = product?.maxOrderableQuantity ?? 0;
+  const clampQty = useCallback(
+    (qty: number) => Math.min(Math.max(Math.round(qty) || 0, 0), maxPerOrder),
+    [maxPerOrder],
+  );
 
-export function CartProvider({ children }: { children: ReactNode }) {
   const [qty, setQtyState] = useState(0);
   const [hydrated, setHydrated] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -43,13 +54,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as { qty?: number };
+        // localStorage can only be read after mount, so this hydration step
+        // has to happen in an effect.
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setQtyState(clampQty(Number(parsed.qty ?? 0)));
       }
     } catch {
       // Corrupt storage — start fresh.
     }
     setHydrated(true);
-  }, []);
+  }, [clampQty]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -68,32 +82,37 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const add = useCallback(
     (amount = 1) => {
-      setQtyState((current) => {
-        const next = Math.min(current + amount, product.maxPerOrder);
-        return next;
-      });
+      setQtyState((current) => clampQty(current + amount));
       showToast("Added to your cart");
     },
-    [showToast],
+    [showToast, clampQty],
   );
 
-  const setQty = useCallback((next: number) => {
-    setQtyState(clampQty(next));
-  }, []);
+  const setQty = useCallback(
+    (next: number) => {
+      setQtyState(clampQty(next));
+    },
+    [clampQty],
+  );
 
   const clear = useCallback(() => setQtyState(0), []);
 
+  // Stock can drop while a cart sits in localStorage, so the live product
+  // row always wins over whatever was stored in the browser.
+  const effectiveQty = Math.min(qty, maxPerOrder);
+
   const value = useMemo<CartState>(
     () => ({
-      qty,
-      subtotalInPaise: qty * product.priceInPaise,
-      maxPerOrder: product.maxPerOrder,
+      product,
+      qty: effectiveQty,
+      subtotalInPaise: effectiveQty * (product?.priceInPaise ?? 0),
+      maxPerOrder,
       hydrated,
       add,
       setQty,
       clear,
     }),
-    [qty, hydrated, add, setQty, clear],
+    [product, effectiveQty, maxPerOrder, hydrated, add, setQty, clear],
   );
 
   return (
@@ -121,6 +140,11 @@ export function useCart(): CartState {
   return ctx;
 }
 
-export function cartLineSummary(qty: number): string {
+/** Convenience accessor for components that only need the catalogue row. */
+export function useProduct(): ProductView | null {
+  return useCart().product;
+}
+
+export function cartLineSummary(product: ProductView, qty: number): string {
   return `${product.shortName} × ${qty} — ${formatINR(qty * product.priceInPaise)}`;
 }

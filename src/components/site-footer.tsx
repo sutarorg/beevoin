@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Mail, ShieldCheck, Truck, Undo2 } from "lucide-react";
-import { payments, policies, site } from "@/lib/config";
+import { payments, site } from "@/lib/config";
+import { getStoreSettings } from "@/lib/settings";
 import { Container } from "./ui";
 
 const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
@@ -30,7 +31,9 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
   },
 ];
 
-export function SiteFooter() {
+export async function SiteFooter() {
+  const settings = await getStoreSettings();
+
   return (
     <footer className="border-t border-sandline bg-cream/60">
       <Container className="py-12 md:py-16">
@@ -44,13 +47,13 @@ export function SiteFooter() {
               labels, lists and little everyday prints — no ink, ever.
             </p>
             <a
-              href={`mailto:${site.supportEmail}`}
+              href={`mailto:${settings.supportEmail}`}
               className="inline-flex items-center gap-2 text-sm font-bold text-accent-deep hover:underline"
             >
               <Mail className="size-4" aria-hidden />
-              {site.supportEmail}
+              {settings.supportEmail}
             </a>
-            <p className="text-xs text-ink-faint">{site.supportHours}</p>
+            <p className="text-xs text-ink-faint">{settings.supportHours}</p>
           </div>
 
           {COLUMNS.map((col) => (
@@ -77,11 +80,11 @@ export function SiteFooter() {
         <div className="mt-10 grid gap-3 rounded-2xl border border-sandline bg-card p-5 text-[13px] font-semibold text-ink-soft sm:grid-cols-3">
           <p className="flex items-center gap-2">
             <Truck className="size-4 text-leaf" aria-hidden />
-            Free shipping · {policies.deliveryEstimate}
+            Free shipping · {settings.deliveryEstimate}
           </p>
           <p className="flex items-center gap-2">
             <Undo2 className="size-4 text-leaf" aria-hidden />
-            {policies.replacementWindowDays}-day replacement for defects
+            {settings.replacementWindowDays}-day replacement for defects
           </p>
           <p className="flex items-center gap-2">
             <ShieldCheck className="size-4 text-leaf" aria-hidden />
@@ -93,7 +96,7 @@ export function SiteFooter() {
 
         <div className="mt-8 flex flex-col items-start justify-between gap-3 border-t border-sandline pt-6 text-xs text-ink-faint sm:flex-row sm:items-center">
           <p>
-            © {new Date().getFullYear()} {site.legalName}. All prices include
+            © {new Date().getFullYear()} {settings.legalName}. All prices include
             GST.
           </p>
           <p className="flex items-center gap-4">

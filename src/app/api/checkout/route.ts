@@ -2,34 +2,42 @@ import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { orders } from "@/db/schema";
 import { checkoutSchema } from "@/lib/validations";
-import { createOrder } from "@/lib/orders";
-import { sendOrderEmail } from "@/lib/email/send";
-import { createRazorpayOrder, isRazorpayConfigured } from "@/lib/payments/razorpay";
-import { product } from "@/lib/config";
+import { createOrder, transitionOrder } from "@/lib/orders";
+import { getPrimaryProduct } from "@/lib/product";
+import { stockStateOf, orderTotalInPaise } from "@/lib/product-view";
+import { InsufficientStockError } from "@/lib/inventory";
+import { sendAdminNewOrderEmail, sendOrderEmail } from "@/lib/email/send";
+import { notifyLowStock, recordPaymentAttempt } from "@/lib/payments/reconcile";
 import {
-  getClientIp,
-  isSameOrigin,
-  jsonError,
-  jsonOk,
-  logEvent,
-  readJson,
-} from "@/lib/http";
+  createRazorpayOrder,
+  isRazorpayConfigured,
+} from "@/lib/payments/razorpay";
+import { getClientIp, isSameOrigin, jsonError, jsonOk, readJson } from "@/lib/http";
+import { logError, logEvent } from "@/lib/logger";
 import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
+/**
+ * Checkout.
+ *
+ * The server owns every number: the product row is read fresh from the
+ * database, the total is computed here, and the client's idea of price,
+ * currency or stock is ignored completely.
+ *
+ * COD:     pending → confirmed (stock committed immediately)
+ * Online:  pending → payment_pending → confirmed (after verified payment)
+ */
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
     return jsonError(403, "Invalid request origin.");
   }
 
   const ip = getClientIp(request);
-  const limit = rateLimit({
-    key: `checkout:${ip}`,
-    limit: 8,
-    windowMs: 60_000,
-  });
+  const limit = rateLimit({ key: `checkout:${ip}`, limit: 8, windowMs: 60_000 });
   if (!limit.ok) {
+    logEvent("rate_limited", { route: "checkout" });
     return jsonError(
       429,
       `Too many attempts. Please wait ${limit.retryAfterSeconds}s and try again.`,
@@ -50,16 +58,44 @@ export async function POST(request: Request) {
   }
 
   const input = parsed.data;
-  const total = product.priceInPaise * input.quantity + product.shippingInPaise;
-
-  if (input.paymentMethod === "online" && !isRazorpayConfigured()) {
-    return jsonError(
-      400,
-      "Online payment is not available right now. Please choose Cash on Delivery.",
-    );
-  }
 
   try {
+    // 1. Authoritative product read — never cached for checkout.
+    const product = await getPrimaryProduct();
+    if (!product) {
+      return jsonError(503, "The store is not ready to take orders yet.");
+    }
+
+    const stock = stockStateOf(product);
+    if (stock === "inactive") {
+      logEvent("checkout_rejected", { reason: "inactive" });
+      return jsonError(400, "This product is currently unavailable.");
+    }
+    if (stock === "out_of_stock") {
+      logEvent("checkout_rejected", { reason: "out_of_stock" });
+      return jsonError(409, "Sorry — the Beevo Go just went out of stock.");
+    }
+    if (input.quantity > product.maxPerOrder) {
+      return jsonError(400, `Maximum ${product.maxPerOrder} units per order.`, {
+        fieldErrors: { quantity: `Maximum ${product.maxPerOrder} per order` },
+      });
+    }
+    if (input.quantity > product.inventoryQuantity) {
+      return jsonError(
+        409,
+        `Only ${product.inventoryQuantity} unit${product.inventoryQuantity === 1 ? "" : "s"} left in stock.`,
+        { fieldErrors: { quantity: "Reduce the quantity" } },
+      );
+    }
+
+    if (input.paymentMethod === "online" && !isRazorpayConfigured()) {
+      return jsonError(
+        400,
+        "Online payment is not available right now. Please choose Cash on Delivery.",
+      );
+    }
+
+    // 2. Create the order (server-side pricing, snapshots, line item).
     const { order, deduplicated } = await createOrder({
       customer: {
         name: input.name,
@@ -74,6 +110,13 @@ export async function POST(request: Request) {
       },
       quantity: input.quantity,
       paymentMethod: input.paymentMethod,
+      product,
+    });
+
+    const total = orderTotalInPaise({
+      unitPriceInPaise: order.unitPriceInPaise,
+      quantity: order.quantity,
+      shippingInPaise: order.shippingInPaise,
     });
 
     logEvent("order_created", {
@@ -85,36 +128,93 @@ export async function POST(request: Request) {
 
     const successUrl = `/order/success?order=${order.orderNumber}&key=${order.lookupSecret}`;
 
+    /* ---------------- Cash on Delivery ---------------- */
     if (input.paymentMethod === "cod") {
-      // Only notify for genuinely new orders — deduped retries stay silent.
-      if (!deduplicated) await sendOrderEmail(order, "order_confirmed");
+      if (!deduplicated) {
+        try {
+          await transitionOrder({
+            orderId: order.id,
+            to: "confirmed",
+            actor: { type: "customer" },
+            note: "Cash on Delivery order confirmed",
+            dedupeKey: `${order.id}:cod_confirmed`,
+          });
+        } catch (err) {
+          if (err instanceof InsufficientStockError) {
+            await transitionOrder({
+              orderId: order.id,
+              to: "cancelled",
+              actor: { type: "system", label: "stock" },
+              note: "Cancelled automatically: stock ran out before confirmation",
+              dedupeKey: `${order.id}:stock_cancelled`,
+            });
+            return jsonError(
+              409,
+              "Sorry — the last unit sold out while you were checking out. Nothing was charged.",
+            );
+          }
+          throw err;
+        }
+
+        const [confirmed] = await db
+          .select()
+          .from(orders)
+          .where(eq(orders.id, order.id))
+          .limit(1);
+        await sendOrderEmail(confirmed, "order_confirmed");
+        await sendAdminNewOrderEmail(confirmed);
+        await notifyLowStock(confirmed.productId);
+      }
       return jsonOk({ mode: "cod", redirect: successUrl });
     }
 
-    // Online payment — create the Razorpay order and stash its id on ours.
+    /* ---------------- Online payment ---------------- */
     try {
-      const rzpOrder = await createRazorpayOrder({
+      // Reuse the Razorpay order when the customer retries the same checkout.
+      let razorpayOrderId = order.razorpayOrderId;
+      if (!razorpayOrderId) {
+        const rzpOrder = await createRazorpayOrder({
+          amountInPaise: total,
+          receipt: order.orderNumber,
+          notes: { orderNumber: order.orderNumber },
+        });
+        razorpayOrderId = rzpOrder.id;
+        await db
+          .update(orders)
+          .set({ razorpayOrderId, updatedAt: new Date() })
+          .where(eq(orders.id, order.id));
+        logEvent("payment_order_created", { orderNumber: order.orderNumber });
+      }
+
+      await recordPaymentAttempt({
+        orderId: order.id,
+        razorpayOrderId,
         amountInPaise: total,
-        receipt: order.orderNumber,
       });
-      await db
-        .update(orders)
-        .set({ razorpayOrderId: rzpOrder.id })
-        .where(eq(orders.id, order.id));
+
+      if (order.status === "pending") {
+        await transitionOrder({
+          orderId: order.id,
+          to: "payment_pending",
+          actor: { type: "customer" },
+          note: "Razorpay checkout opened",
+          dedupeKey: `${order.id}:payment_pending`,
+        });
+      }
 
       return jsonOk({
         mode: "razorpay",
         orderNumber: order.orderNumber,
         razorpay: {
-          orderId: rzpOrder.id,
+          orderId: razorpayOrderId,
           amount: total,
           currency: "INR",
         },
       });
     } catch (err) {
-      logEvent("razorpay_order_failed", {
+      logError("payment_failed", err, {
         orderNumber: order.orderNumber,
-        error: err instanceof Error ? err.message : "unknown",
+        stage: "create_order",
       });
       return jsonError(
         502,
@@ -122,9 +222,10 @@ export async function POST(request: Request) {
       );
     }
   } catch (err) {
-    logEvent("checkout_error", {
-      error: err instanceof Error ? err.message : "unknown",
-    });
+    if (err instanceof InsufficientStockError) {
+      return jsonError(409, "That quantity is no longer available.");
+    }
+    logError("checkout_error", err);
     return jsonError(
       500,
       "Something went wrong on our side. Please try again in a moment.",

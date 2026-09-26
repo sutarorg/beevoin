@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { L, LegalPage, P } from "@/components/legal-page";
 import { site } from "@/lib/config";
+import { getStoreSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Privacy policy",
@@ -9,12 +10,14 @@ export const metadata: Metadata = {
   alternates: { canonical: "/privacy" },
 };
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const settings = await getStoreSettings();
+
   return (
     <LegalPage
       title="Privacy Policy"
       updated="February 2026"
-      intro={`This policy explains what personal information ${site.legalName} ("Beevo", "we", "us") collects when you use our website, why we collect it, and the choices you have. It is written to comply with applicable Indian law, including the Digital Personal Data Protection Act, 2023.`}
+      intro={`This policy explains what personal information ${settings.legalName} ("Beevo", "we", "us") collects when you use our website, why we collect it, and the choices you have. It is written to comply with applicable Indian law, including the Digital Personal Data Protection Act, 2023.`}
       sections={[
         {
           heading: "What we collect",
@@ -123,7 +126,7 @@ export default function PrivacyPage() {
                 ]}
               />
               <P>
-                Write to us at {site.supportEmail} from your registered email
+                Write to us at {settings.supportEmail} from your registered email
                 and we&apos;ll act on verified requests as required by law.
               </P>
             </>
@@ -134,8 +137,8 @@ export default function PrivacyPage() {
           body: (
             <P>
               For any privacy concern or complaint, contact our grievance
-              officer at {site.supportEmail}
-              {site.address ? `, or write to ${site.address}` : ""}. Include
+              officer at {settings.supportEmail}
+              {settings.businessAddress ? `, or write to ${settings.businessAddress}` : ""}. Include
               your order ID where relevant. We aim to acknowledge complaints
               within 48 hours and resolve them promptly.
             </P>

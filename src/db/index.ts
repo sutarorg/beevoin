@@ -22,6 +22,12 @@ import * as schema from "./schema";
  */
 
 export type Database = NodePgDatabase<typeof schema>;
+/** Transaction handle — accepted anywhere a `Database` is. */
+export type Transaction = Parameters<
+  Parameters<Database["transaction"]>[0]
+>[0];
+/** Either the pooled client or an open transaction. */
+export type DbClient = Database | Transaction;
 
 function connectionUrl(): string {
   const url = process.env.POSTGRES_URL ?? process.env.DATABASE_URL;

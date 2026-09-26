@@ -1,198 +1,212 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { desc, sql } from "drizzle-orm";
-import { db } from "@/db";
-import { orders, type OrderStatus } from "@/db/schema";
-import { isAdmin } from "@/lib/admin-auth";
-import { ORDER_STATUSES, STATUS_META } from "@/lib/order-status";
+import { AlertTriangle } from "lucide-react";
+import { requirePermissionPage } from "@/lib/auth/admin";
+import { getDashboardMetrics } from "@/lib/admin-metrics";
 import { formatDateTime, formatINR } from "@/lib/format";
-import { cn } from "@/lib/cn";
+import {
+  EmptyRow,
+  PageHeader,
+  Panel,
+  Pill,
+  StatCard,
+  StatusPill,
+  TableWrap,
+  Td,
+  Th,
+  paymentTone,
+} from "@/components/admin/ui";
 
 export const dynamic = "force-dynamic";
 
-const toneByStatus: Partial<Record<OrderStatus, string>> = {
-  pending: "bg-haldi-soft text-haldi",
-  confirmed: "bg-accent-soft text-accent-deep",
-  processing: "bg-accent-soft text-accent-deep",
-  shipped: "bg-cream text-ink-soft",
-  out_for_delivery: "bg-cream text-ink-soft",
-  delivered: "bg-leaf-soft text-leaf",
-  cancelled: "bg-chili-soft text-chili",
-  refunded: "bg-chili-soft text-chili",
-};
+export const metadata = { title: "Dashboard" };
 
-export default async function AdminDashboard({
-  searchParams,
-}: {
-  searchParams: Promise<{ status?: string }>;
-}) {
-  if (!(await isAdmin())) redirect("/admin/login");
+export default async function AdminDashboardPage() {
+  const admin = await requirePermissionPage("dashboard.view");
+  const m = await getDashboardMetrics();
 
-  const { status } = await searchParams;
-  const filter = (ORDER_STATUSES as string[]).includes(status ?? "")
-    ? (status as OrderStatus)
-    : null;
-
-  const [rows, kpis] = await Promise.all([
-    db.select().from(orders).orderBy(desc(orders.createdAt)).limit(200),
-    db
-      .select({
-        totalOrders: sql<number>`count(*)::int`,
-        revenue: sql<number>`coalesce(sum(case when payment_status = 'paid' or (payment_method = 'cod' and status = 'delivered') then total_in_paise else 0 end), 0)::int`,
-        toShip: sql<number>`count(*) filter (where status in ('confirmed','processing'))::int`,
-        today: sql<number>`count(*) filter (where created_at::date = (now() at time zone 'Asia/Kolkata')::date)::int`,
-      })
-      .from(orders)
-      .then((r) => r[0]),
-  ]);
-
-  const visible = filter ? rows.filter((o) => o.status === filter) : rows;
+  const alerts: Array<{ label: string; href: string }> = [];
+  if (m.alerts.lowStock && m.product) {
+    alerts.push({
+      label: `Low stock — only ${m.product.inventoryQuantity} unit${m.product.inventoryQuantity === 1 ? "" : "s"} left`,
+      href: "/admin/inventory",
+    });
+  }
+  if (m.queue.failedPayments > 0) {
+    alerts.push({
+      label: `${m.queue.failedPayments} order${m.queue.failedPayments === 1 ? "" : "s"} with failed payments`,
+      href: "/admin/orders?payment=unpaid",
+    });
+  }
+  if (m.alerts.unprocessedWebhooks > 0) {
+    alerts.push({
+      label: `${m.alerts.unprocessedWebhooks} webhook event${m.alerts.unprocessedWebhooks === 1 ? "" : "s"} not processed`,
+      href: "/admin/webhooks",
+    });
+  }
+  if (m.alerts.failedEmails > 0) {
+    alerts.push({
+      label: `${m.alerts.failedEmails} email${m.alerts.failedEmails === 1 ? "" : "s"} failed to send`,
+      href: "/admin/emails",
+    });
+  }
+  if (m.alerts.pendingRefunds > 0) {
+    alerts.push({
+      label: `${m.alerts.pendingRefunds} refund${m.alerts.pendingRefunds === 1 ? "" : "s"} still processing`,
+      href: "/admin/refunds",
+    });
+  }
+  if (m.alerts.unresolvedMessages > 0) {
+    alerts.push({
+      label: `${m.alerts.unresolvedMessages} customer message${m.alerts.unresolvedMessages === 1 ? "" : "s"} waiting`,
+      href: "/admin/messages",
+    });
+  }
 
   return (
-    <div className="space-y-7">
-      <div>
-        <h1 className="font-display text-2xl font-semibold text-ink">
-          Orders
-        </h1>
-        <p className="text-sm font-semibold text-ink-faint">
-          Latest 200 orders · times in IST
-        </p>
-      </div>
+    <>
+      <PageHeader
+        title={`Hello, ${admin.name?.split(" ")[0] || admin.email.split("@")[0]}`}
+        subtitle="Live numbers straight from the order book — nothing here is estimated."
+      />
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {[
-          { label: "Orders today", value: String(kpis?.today ?? 0) },
-          { label: "Total orders", value: String(kpis?.totalOrders ?? 0) },
-          { label: "To pack / ship", value: String(kpis?.toShip ?? 0) },
-          {
-            label: "Collected revenue",
-            value: formatINR(kpis?.revenue ?? 0),
-          },
-        ].map((kpi) => (
-          <div
-            key={kpi.label}
-            className="rounded-2xl border border-sandline bg-card p-5"
-          >
-            <p className="text-[12px] font-extrabold uppercase tracking-wider text-ink-faint">
-              {kpi.label}
-            </p>
-            <p className="mt-1.5 font-mono text-2xl font-bold tabular-nums text-ink">
-              {kpi.value}
-            </p>
-          </div>
-        ))}
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2">
-        <Link
-          href="/admin"
-          className={cn(
-            "rounded-full px-4 py-2 text-[13px] font-bold",
-            !filter ? "bg-ink text-paper" : "bg-card text-ink-soft hover:bg-cream",
-          )}
-        >
-          All
-        </Link>
-        {ORDER_STATUSES.map((s) => (
-          <Link
-            key={s}
-            href={`/admin?status=${s}`}
-            className={cn(
-              "rounded-full px-4 py-2 text-[13px] font-bold",
-              filter === s
-                ? "bg-ink text-paper"
-                : "bg-card text-ink-soft hover:bg-cream",
-            )}
-          >
-            {STATUS_META[s].label}
-          </Link>
-        ))}
-      </div>
-
-      {visible.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-sandline bg-card p-12 text-center">
-          <p className="font-bold text-ink">No orders here yet</p>
-          <p className="mt-1 text-sm text-ink-soft">
-            {filter
-              ? "Try a different filter."
-              : "Orders will appear here as soon as customers start checking out."}
+      {alerts.length > 0 ? (
+        <div className="mb-6 rounded-2xl border border-haldi/40 bg-haldi-soft/60 p-4">
+          <p className="flex items-center gap-2 text-[13px] font-extrabold text-haldi">
+            <AlertTriangle className="size-4" aria-hidden />
+            Needs your attention
           </p>
+          <ul className="mt-2 space-y-1">
+            {alerts.map((alert) => (
+              <li key={alert.href + alert.label}>
+                <Link
+                  href={alert.href}
+                  className="text-[13px] font-bold text-ink underline underline-offset-2 hover:text-accent-deep"
+                >
+                  {alert.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
-      ) : (
-        <div className="overflow-x-auto rounded-2xl border border-sandline bg-card">
-          <table className="w-full min-w-[820px] text-left text-sm">
+      ) : null}
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label="Today"
+          value={formatINR(m.today.netInPaise)}
+          hint={`${m.today.orders} order${m.today.orders === 1 ? "" : "s"} placed`}
+          tone="accent"
+        />
+        <StatCard
+          label="Last 7 days"
+          value={formatINR(m.week.netInPaise)}
+          hint={`${m.week.units} unit${m.week.units === 1 ? "" : "s"} collected`}
+        />
+        <StatCard
+          label="Last 30 days"
+          value={formatINR(m.month.netInPaise)}
+          hint={`${m.month.orders} orders · ${m.month.cancelled} cancelled`}
+        />
+        <StatCard
+          label="Lifetime net revenue"
+          value={formatINR(m.lifetime.netInPaise)}
+          hint={`${formatINR(m.lifetime.refundedInPaise)} refunded`}
+        />
+      </div>
+
+      <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          label="To pack"
+          value={m.queue.awaitingFulfilment}
+          hint="Confirmed & processing"
+          href="/admin/orders?status=confirmed"
+        />
+        <StatCard
+          label="In transit"
+          value={m.queue.inTransit}
+          hint="Shipped & out for delivery"
+          href="/admin/orders?status=shipped"
+        />
+        <StatCard
+          label="Awaiting payment"
+          value={m.queue.paymentPending}
+          hint="Online checkouts not completed"
+          href="/admin/orders?status=payment_pending"
+        />
+        <StatCard
+          label="Stock on hand"
+          value={m.product ? m.product.inventoryQuantity : "—"}
+          hint={m.product ? m.product.sku : "No active product"}
+          href="/admin/inventory"
+          tone={m.alerts.lowStock ? "warn" : "default"}
+        />
+      </div>
+
+      <div className="mt-6">
+        <Panel
+          title="Latest orders"
+          action={
+            <Link
+              href="/admin/orders"
+              className="text-[13px] font-bold text-accent-deep hover:underline"
+            >
+              View all
+            </Link>
+          }
+        >
+          <TableWrap>
             <thead>
-              <tr className="border-b border-sandline text-[11.5px] uppercase tracking-wider text-ink-faint">
-                <th className="px-5 py-3.5 font-extrabold">Order</th>
-                <th className="px-5 py-3.5 font-extrabold">Customer</th>
-                <th className="px-5 py-3.5 font-extrabold">City</th>
-                <th className="px-5 py-3.5 font-extrabold">Total</th>
-                <th className="px-5 py-3.5 font-extrabold">Payment</th>
-                <th className="px-5 py-3.5 font-extrabold">Status</th>
-                <th className="px-5 py-3.5 font-extrabold">Placed</th>
+              <tr>
+                <Th>Order</Th>
+                <Th>Customer</Th>
+                <Th>Placed</Th>
+                <Th>Payment</Th>
+                <Th>Status</Th>
+                <Th className="text-right">Total</Th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-sandline/60">
-              {visible.map((order) => (
-                <tr key={order.id} className="hover:bg-cream/40">
-                  <td className="px-5 py-3.5">
-                    <Link
-                      href={`/admin/orders/${order.id}`}
-                      className="font-mono font-bold text-accent-deep hover:underline"
-                    >
-                      {order.orderNumber}
-                    </Link>
-                    <p className="text-[11.5px] font-semibold text-ink-faint">
-                      ×{order.quantity} {order.productSku}
-                    </p>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <p className="font-bold text-ink">{order.customerName}</p>
-                    <p className="text-[12px] font-semibold text-ink-faint">
-                      {order.phone}
-                    </p>
-                  </td>
-                  <td className="px-5 py-3.5 font-semibold text-ink-soft">
-                    {order.city}
-                  </td>
-                  <td className="px-5 py-3.5 font-mono font-bold tabular-nums">
-                    {formatINR(order.totalInPaise)}
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span className="font-bold text-ink">
-                      {order.paymentMethod === "cod" ? "COD" : "Online"}
-                    </span>
-                    <p
-                      className={cn(
-                        "text-[11.5px] font-bold",
-                        order.paymentStatus === "paid"
-                          ? "text-leaf"
-                          : "text-haldi",
-                      )}
-                    >
-                      {order.paymentStatus}
-                    </p>
-                  </td>
-                  <td className="px-5 py-3.5">
-                    <span
-                      className={cn(
-                        "rounded-full px-2.5 py-1 text-[11.5px] font-extrabold",
-                        toneByStatus[order.status],
-                      )}
-                    >
-                      {STATUS_META[order.status].label}
-                    </span>
-                  </td>
-                  <td className="px-5 py-3.5 text-[12.5px] font-semibold text-ink-soft">
-                    {formatDateTime(order.createdAt)}
-                  </td>
-                </tr>
-              ))}
+            <tbody>
+              {m.recent.length === 0 ? (
+                <EmptyRow colSpan={6}>
+                  No orders yet. Your first sale will appear here instantly.
+                </EmptyRow>
+              ) : (
+                m.recent.map((order) => (
+                  <tr key={order.id} className="hover:bg-cream/50">
+                    <Td>
+                      <Link
+                        href={`/admin/orders/${order.id}`}
+                        className="font-extrabold text-ink hover:text-accent-deep"
+                      >
+                        {order.orderNumber}
+                      </Link>
+                    </Td>
+                    <Td>
+                      {order.customerName}
+                      <span className="block text-[12px] font-semibold text-ink-faint">
+                        {order.city}, {order.state}
+                      </span>
+                    </Td>
+                    <Td>{formatDateTime(order.createdAt)}</Td>
+                    <Td>
+                      <Pill tone={paymentTone(order.paymentStatus)}>
+                        {order.paymentMethod === "cod" ? "COD" : "Online"} ·{" "}
+                        {order.paymentStatus}
+                      </Pill>
+                    </Td>
+                    <Td>
+                      <StatusPill status={order.status} />
+                    </Td>
+                    <Td className="text-right font-extrabold text-ink">
+                      {formatINR(order.totalInPaise)}
+                    </Td>
+                  </tr>
+                ))
+              )}
             </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+          </TableWrap>
+        </Panel>
+      </div>
+    </>
   );
 }

@@ -1,19 +1,20 @@
 import { db } from "@/db";
 import { contactMessages } from "@/db/schema";
 import { contactSchema } from "@/lib/validations";
-import {
-  getClientIp,
-  isSameOrigin,
-  jsonError,
-  jsonOk,
-  logEvent,
-  readJson,
-} from "@/lib/http";
+import { sendAdminContactEmail } from "@/lib/email/send";
+import { getClientIp, isSameOrigin, jsonError, jsonOk, readJson } from "@/lib/http";
+import { logError, logEvent } from "@/lib/logger";
+import { normaliseEmail, normalisePhone } from "@/lib/customers";
 import { rateLimit } from "@/lib/rate-limit";
-import { forwardToWeb3Forms, web3formsKey } from "@/lib/web3forms";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
+/**
+ * Contact form. Messages are stored in `contact_messages` (the durable
+ * record, visible at /admin/messages) and forwarded to the store's
+ * notification address through Resend.
+ */
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) return jsonError(403, "Invalid request origin.");
 
@@ -39,44 +40,39 @@ export async function POST(request: Request) {
   const input = parsed.data;
 
   try {
-    await db.insert(contactMessages).values({
-      name: input.name,
-      email: input.email.toLowerCase(),
-      phone: input.phone || null,
-      topic: input.topic,
-      orderNumber: input.orderNumber ? input.orderNumber.toUpperCase() : null,
-      message: input.message,
-    });
-    logEvent("contact_message", { topic: input.topic });
+    const [message] = await db
+      .insert(contactMessages)
+      .values({
+        name: input.name,
+        email: normaliseEmail(input.email),
+        phone: normalisePhone(input.phone || null),
+        topic: input.topic,
+        orderNumber: input.orderNumber ? input.orderNumber.toUpperCase() : null,
+        message: input.message,
+        status: "new",
+      })
+      .returning();
 
-    // Web3Forms delivery (emails the store owner). Server-side delivery works
-    // on Pro plans; on the free tier we hand the key to this validated,
-    // rate-limited client so it can complete the submission from the browser.
-    let web3formsFallbackKey: string | undefined;
-    let web3formsDelivered = false;
-    const key = web3formsKey();
-    if (key) {
-      const result = await forwardToWeb3Forms(input, key);
-      if (result.status === "delivered") {
-        web3formsDelivered = true;
-      } else if (result.status === "client-side-required") {
-        web3formsFallbackKey = key;
-        logEvent("web3forms_requires_client");
-      } else {
-        logEvent("web3forms_failed", { error: result.error });
-      }
-    }
+    logEvent("contact_message_received", { topic: input.topic });
+
+    // Delivery failures never fail the customer's submission: the message is
+    // already stored and visible in the admin.
+    await sendAdminContactEmail({
+      messageId: message.id,
+      name: message.name,
+      email: message.email,
+      phone: message.phone,
+      topic: message.topic,
+      orderNumber: message.orderNumber,
+      message: message.message,
+    });
 
     return jsonOk({
       message:
         "Thanks for writing to us — we usually reply within one business day.",
-      web3formsDelivered,
-      ...(web3formsFallbackKey ? { web3formsFallbackKey } : {}),
     });
   } catch (err) {
-    logEvent("contact_error", {
-      error: err instanceof Error ? err.message : "unknown",
-    });
+    logError("internal_error", err, { route: "contact" });
     return jsonError(500, "Something went wrong. Please try again shortly.");
   }
 }
