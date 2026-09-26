@@ -39,8 +39,11 @@ export function BuyBox() {
   // product is unavailable we never invent a price or let the buyer proceed.
   if (!product.purchasable) {
     return (
-      <div className="min-w-0 space-y-4" data-testid="buy-box">
-        <p className="font-display text-[2.1rem] font-bold leading-none tracking-tight text-ink">
+      <div
+        className="min-w-0 space-y-4 rounded-[2rem] border border-sandline/80 bg-white/85 p-5 shadow-pop backdrop-blur"
+        data-testid="buy-box"
+      >
+        <p className="font-display text-[2.1rem] font-extrabold leading-none tracking-[-0.04em] text-ink">
           {product.priceInPaise > 0 ? formatINR(product.priceInPaise) : "—"}
           {product.priceInPaise > 0 ? (
             <span className="ml-2 font-sans text-sm font-semibold text-ink-faint">online</span>
@@ -64,15 +67,18 @@ export function BuyBox() {
   }
 
   return (
-    <div className="min-w-0 space-y-5" data-testid="buy-box">
+    <div
+      className="min-w-0 space-y-5 rounded-[2rem] border border-sandline/80 bg-white/85 p-4 shadow-pop backdrop-blur sm:p-5"
+      data-testid="buy-box"
+    >
       {/* Price — online price first, with the COD comparison right beside it
           so the prepaid-vs-COD decision happens at the point of purchase,
           not half a page later. */}
       <div className="space-y-2.5">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-          <p className="font-display text-[2.1rem] font-bold leading-none tracking-tight text-ink">
+          <p className="font-display text-[2.2rem] font-extrabold leading-none tracking-[-0.04em] text-ink">
             {formatINR(product.priceInPaise)}
-            <span className="ml-2 font-sans text-sm font-semibold text-leaf">online</span>
+            <span className="ml-2 align-middle font-sans text-sm font-bold text-leaf">online</span>
           </p>
           {codSaving > 0 ? (
             <>
@@ -97,7 +103,7 @@ export function BuyBox() {
         {SOCIAL_PROOF.reviewCount > 0 ? (
           <a
             href="#reviews"
-            className="inline-flex items-center gap-2.5 rounded py-0.5 transition-opacity hover:opacity-80"
+            className="inline-flex items-center gap-2.5 rounded-full bg-cream/70 px-3 py-1.5 transition-opacity hover:opacity-80"
           >
             <StarRating rating={SOCIAL_PROOF.rating} />
             <span className="text-[13.5px] font-bold text-ink-soft">
@@ -110,12 +116,12 @@ export function BuyBox() {
         ) : null}
       </div>
 
-      <div className="flex items-center gap-3">
-        <span className="text-sm font-bold text-ink-soft" id="qty-label">
+      <div className="flex flex-wrap items-center gap-3 rounded-2xl bg-cream/65 p-2.5">
+        <span className="pl-1 text-sm font-bold text-ink-soft" id="qty-label">
           Qty
         </span>
         <div
-          className="inline-flex items-center rounded-full border-[1.5px] border-sandline bg-white"
+          className="inline-flex items-center rounded-full border-[1.5px] border-sandline bg-white shadow-[0_1px_0_rgb(255_255_255/0.85)]"
           role="group"
           aria-labelledby="qty-label"
         >

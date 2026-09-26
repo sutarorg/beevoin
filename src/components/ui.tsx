@@ -12,7 +12,7 @@ export function Container({
   className?: string;
 }) {
   return (
-    <div className={cn("mx-auto w-full max-w-6xl px-5 md:px-8", className)}>
+    <div className={cn("mx-auto w-full max-w-[1180px] px-5 sm:px-6 md:px-8", className)}>
       {children}
     </div>
   );
@@ -28,7 +28,7 @@ export function Section({
   className?: string;
 }) {
   return (
-    <section id={id} className={cn("py-14 md:py-20", className)}>
+    <section id={id} className={cn("py-16 md:py-24", className)}>
       {children}
     </section>
   );
@@ -44,7 +44,7 @@ export function Eyebrow({
   return (
     <p
       className={cn(
-        "flex items-center gap-2.5 text-[11px] font-extrabold uppercase tracking-[0.18em] text-ink-faint",
+        "inline-flex items-center gap-2.5 text-[11px] font-extrabold uppercase tracking-[0.18em] text-ink-faint",
         className,
       )}
     >
@@ -71,7 +71,7 @@ export function SectionTitle({
   return (
     <Tag
       className={cn(
-        "font-display text-[1.7rem] leading-[1.12] font-semibold tracking-tight text-ink md:text-4xl",
+        "font-display text-[1.85rem] leading-[1.1] font-bold tracking-[-0.035em] text-ink md:text-4xl",
         className,
       )}
     >
@@ -95,16 +95,16 @@ export function buttonClasses({
   className?: string;
 } = {}): string {
   return cn(
-    "inline-flex select-none items-center justify-center gap-2 rounded-full font-bold transition-all duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50",
+    "inline-flex select-none items-center justify-center gap-2 rounded-full font-bold tracking-[-0.01em] transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 disabled:hover:translate-y-0",
     size === "lg" && "min-h-13 px-7 text-base",
     size === "md" && "min-h-11 px-6 text-[15px]",
     size === "sm" && "min-h-9 px-4 text-sm",
     variant === "primary" &&
-      "bg-accent text-white shadow-[0_6px_18px_-6px_rgb(228_82_14/0.55)] hover:bg-accent-deep",
+      "bg-gradient-to-r from-accent to-accent-deep text-white shadow-glow hover:shadow-pop",
     variant === "secondary" &&
-      "border-[1.5px] border-ink bg-transparent text-ink hover:bg-ink hover:text-paper",
-    variant === "dark" && "bg-ink text-paper hover:bg-black",
-    variant === "ghost" && "text-ink underline-offset-4 hover:underline",
+      "border-[1.5px] border-ink bg-white/40 text-ink shadow-lift hover:bg-ink hover:text-paper",
+    variant === "dark" && "bg-ink text-paper shadow-lift hover:bg-black hover:shadow-pop",
+    variant === "ghost" && "text-ink underline-offset-4 hover:underline hover:translate-y-0",
     className,
   );
 }
@@ -134,7 +134,7 @@ export function Badge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold",
+        "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ring-1 ring-inset ring-black/5",
         badgeTones[tone],
         className,
       )}
@@ -152,7 +152,7 @@ export function TrustChip({
   children: ReactNode;
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5 text-[13px] font-bold text-ink-soft">
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-sandline/70 bg-white/75 px-2.5 py-1 text-[13px] font-bold text-ink-soft shadow-[0_1px_0_rgb(255_255_255/0.75)]">
       <span className="text-leaf [&>svg]:size-4" aria-hidden>
         {icon}
       </span>
@@ -215,7 +215,7 @@ export function Card({
   return (
     <div
       className={cn(
-        "rounded-2xl border border-sandline bg-card shadow-lift",
+        "rounded-3xl border border-sandline/80 bg-card shadow-lift transition-all duration-200",
         className,
       )}
     >
@@ -266,7 +266,7 @@ export function Field({
 
 export const inputClasses = (invalid?: boolean) =>
   cn(
-    "min-h-12 w-full rounded-xl border-[1.5px] bg-white px-4 text-[15px] font-semibold text-ink placeholder:font-medium placeholder:text-ink-faint/70 transition-colors",
+    "min-h-12 w-full rounded-2xl border-[1.5px] bg-white px-4 text-[15px] font-semibold text-ink shadow-[inset_0_1px_0_rgb(255_255_255/0.9)] placeholder:font-medium placeholder:text-ink-faint/70 transition-colors",
     invalid
       ? "border-chili focus:border-chili"
       : "border-sandline hover:border-ink-faint/60 focus:border-ink",

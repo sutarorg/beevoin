@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CircleHelp, Menu, PackageSearch, ShoppingBag, X } from "lucide-react";
+import { CircleHelp, Menu, PackageSearch, ShoppingBag, X, Zap } from "lucide-react";
 import { useCart } from "./cart-store";
 import { cn } from "@/lib/cn";
 
@@ -45,15 +45,19 @@ export function SiteHeader() {
   }, [pathname]);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-sandline/70 bg-paper/90 backdrop-blur-md">
-      <p className="bg-ink py-2 text-center text-[12px] font-bold tracking-wide text-paper">
+    <header className="sticky top-0 z-50 border-b border-sandline/70 bg-paper/85 shadow-[0_1px_0_rgb(255_255_255/0.7)] backdrop-blur-xl">
+      <p className="bg-ink px-4 py-2 text-center text-[12px] font-bold tracking-wide text-paper">
         Free shipping across India
         <span className="mx-2 text-accent" aria-hidden>
           •
         </span>
-        Cash on Delivery available
+        Dispatches in 24–48h
+        <span className="mx-2 text-accent" aria-hidden>
+          •
+        </span>
+        COD available
       </p>
-      <div className="mx-auto flex h-15 w-full max-w-6xl items-center justify-between gap-3 px-5 md:px-8">
+      <div className="mx-auto flex h-16 w-full max-w-[1180px] items-center justify-between gap-3 px-5 sm:px-6 md:px-8">
         <Link
           href="/"
           className="flex items-center gap-2.5"
@@ -65,19 +69,37 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-7 lg:flex" aria-label="Primary">
-          {NAV_LINKS.map((link) => (
-            <Link
-              key={link.href}
-              href={link.href}
-              className="text-sm font-bold text-ink-soft transition-colors hover:text-ink"
-            >
-              {link.label}
-            </Link>
-          ))}
+        <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
+          {NAV_LINKS.map((link) => {
+            const active =
+              !link.href.startsWith("/#") &&
+              (pathname === link.href || pathname.startsWith(`${link.href}/`));
+
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={cn(
+                  "relative rounded-full px-3.5 py-2 text-sm font-bold transition-colors",
+                  active
+                    ? "bg-white text-ink shadow-lift"
+                    : "text-ink-soft hover:bg-white/70 hover:text-ink",
+                )}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="flex items-center gap-1.5">
+          <Link
+            href="/#hero-cta"
+            className="hidden items-center gap-1.5 rounded-full bg-gradient-to-r from-accent to-accent-deep px-4 py-2.5 text-sm font-extrabold text-white shadow-glow transition-all hover:-translate-y-0.5 hover:shadow-pop md:inline-flex"
+          >
+            <Zap className="size-4" aria-hidden />
+            Buy now
+          </Link>
           <Link
             href="/track"
             className="hidden items-center gap-1.5 rounded-full px-3 py-2 text-sm font-bold text-ink-soft transition-colors hover:bg-cream hover:text-ink sm:inline-flex"
@@ -95,7 +117,7 @@ export function SiteHeader() {
           </Link>
           <Link
             href="/cart"
-            className="relative inline-flex items-center gap-2 rounded-full bg-cream px-4 py-2.5 text-sm font-bold text-ink transition-colors hover:bg-sandline"
+            className="relative inline-flex items-center gap-2 rounded-full border border-sandline/70 bg-white px-4 py-2.5 text-sm font-bold text-ink shadow-lift transition-all hover:-translate-y-0.5 hover:bg-cream"
             aria-label={
               hydrated && qty > 0
                 ? `Cart, ${qty} item${qty > 1 ? "s" : ""}`
@@ -134,17 +156,25 @@ export function SiteHeader() {
       <div
         id="mobile-nav"
         className={cn(
-          "border-t border-sandline/70 bg-paper lg:hidden",
+          "border-t border-sandline/70 bg-paper/95 shadow-pop backdrop-blur-xl lg:hidden",
           open ? "block" : "hidden",
         )}
       >
-        <nav className="space-y-1 px-5 py-4" aria-label="Mobile">
+        <nav className="space-y-2 px-5 py-4" aria-label="Mobile">
+          <Link
+            href="/#hero-cta"
+            onClick={() => setOpen(false)}
+            className="mb-2 flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-accent to-accent-deep px-4 py-3.5 text-[15px] font-extrabold text-white shadow-glow"
+          >
+            <Zap className="size-4.5" aria-hidden />
+            Buy Beevo Go now
+          </Link>
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
               onClick={() => setOpen(false)}
-              className="block rounded-xl px-4 py-3 text-[15px] font-bold text-ink transition-colors hover:bg-cream"
+              className="block rounded-2xl px-4 py-3 text-[15px] font-bold text-ink transition-colors hover:bg-white"
             >
               {link.label}
             </Link>
@@ -152,7 +182,7 @@ export function SiteHeader() {
           <Link
             href="/track"
             onClick={() => setOpen(false)}
-            className="block rounded-xl px-4 py-3 text-[15px] font-bold text-accent-deep transition-colors hover:bg-accent-soft"
+            className="block rounded-2xl px-4 py-3 text-[15px] font-bold text-accent-deep transition-colors hover:bg-accent-soft"
           >
             Track your order
           </Link>
