@@ -112,7 +112,7 @@ export function CheckoutForm({
 
   const buttonLabel = useMemo(() => {
     if (paymentMethod === "cod")
-      return `Place order — ${formatINR(totalInPaise)} · Pay on delivery`;
+      return `Place order - ${formatINR(totalInPaise)}`;
     return `Pay ${formatINR(totalInPaise)} securely`;
   }, [paymentMethod, totalInPaise]);
 
@@ -429,7 +429,8 @@ export function CheckoutForm({
               </Card>
 
               {/* ===== Payment method ===== */}
-              <Card className="p-6 md:p-7">
+              <Card className="overflow-hidden border-accent/15 p-4 shadow-pop sm:p-6 md:p-7">
+                <div className="rounded-2xl bg-cream/70 p-4 sm:bg-transparent sm:p-0">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <h2 className="font-display text-xl font-semibold text-ink">
                     How would you like to pay?
@@ -444,7 +445,7 @@ export function CheckoutForm({
                   {razorpayEnabled ? (
                     <label
                       className={cn(
-                        "flex cursor-pointer items-start gap-3.5 rounded-2xl border-[1.5px] p-4.5 transition",
+                        "flex cursor-pointer items-start gap-3 rounded-2xl border-[1.5px] bg-white p-4 shadow-sm transition sm:gap-3.5 sm:p-4.5",
                         paymentMethod === "online"
                           ? "border-accent bg-accent-soft/60"
                           : "border-sandline bg-white hover:border-ink-faint/50",
@@ -475,7 +476,7 @@ export function CheckoutForm({
 
                   <label
                     className={cn(
-                      "flex cursor-pointer items-start gap-3.5 rounded-2xl border-[1.5px] p-4.5 transition",
+                      "flex cursor-pointer items-start gap-3 rounded-2xl border-[1.5px] bg-white p-4 shadow-sm transition sm:gap-3.5 sm:p-4.5",
                       paymentMethod === "cod"
                         ? "border-accent bg-accent-soft/60"
                         : "border-sandline bg-white hover:border-ink-faint/50",
@@ -502,6 +503,7 @@ export function CheckoutForm({
                       </span>
                     </span>
                   </label>
+                </div>
                 </div>
               </Card>
 

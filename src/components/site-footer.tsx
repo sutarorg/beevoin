@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { Mail, ShieldCheck, Truck, Undo2 } from "lucide-react";
-import { payments, policies, site } from "@/lib/config";
-import { guidesByFreshness } from "@/lib/guides";
+import { Mail } from "lucide-react";
+import { site } from "@/lib/config";
 import { Container } from "./ui";
 
 const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
@@ -12,18 +11,6 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
       { href: "/cart", label: "Your cart" },
       { href: "/track", label: "Track your order" },
       { href: "/faq", label: "FAQ" },
-    ],
-  },
-  {
-    title: "Guides",
-    links: [
-      { href: "/guides", label: "All guides" },
-      ...guidesByFreshness()
-        .slice(0, 3)
-        .map((guide) => ({
-          href: `/guides/${guide.slug}`,
-          label: guide.metaTitle,
-        })),
     ],
   },
   {
@@ -46,7 +33,7 @@ export function SiteFooter() {
   return (
     <footer id="site-footer" className="border-t border-sandline bg-cream/75">
       <Container className="py-12 md:py-16">
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1.2fr_1fr_1fr]">
+        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1fr_1fr]">
           <div className="max-w-sm space-y-4">
             <p className="font-display text-2xl font-bold tracking-tight text-ink">
               beevo<span className="text-accent">.</span>
@@ -86,24 +73,7 @@ export function SiteFooter() {
           ))}
         </div>
 
-        <div className="mt-10 grid gap-3 rounded-3xl border border-sandline/80 bg-card p-5 text-[13px] font-semibold text-ink-soft shadow-lift sm:grid-cols-3">
-          <p className="flex items-center gap-2">
-            <Truck className="size-4 text-leaf" aria-hidden />
-            Free shipping · {policies.deliveryEstimate}
-          </p>
-          <p className="flex items-center gap-2">
-            <Undo2 className="size-4 text-leaf" aria-hidden />
-            {policies.replacementWindowDays}-day replacement for defects
-          </p>
-          <p className="flex items-center gap-2">
-            <ShieldCheck className="size-4 text-leaf" aria-hidden />
-            {payments.razorpayEnabled
-              ? "UPI, cards & netbanking via Razorpay · COD"
-              : "Cash on Delivery available across India"}
-          </p>
-        </div>
-
-        <div className="mt-8 flex flex-col items-start justify-between gap-3 border-t border-sandline pt-6 text-xs text-ink-faint sm:flex-row sm:items-center">
+        <div className="mt-10 flex flex-col items-start justify-between gap-3 border-t border-sandline pt-6 text-xs text-ink-faint sm:flex-row sm:items-center">
           <p>
             © {new Date().getFullYear()} {site.legalName}. All prices include
             GST.

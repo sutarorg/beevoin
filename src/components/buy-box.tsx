@@ -82,9 +82,6 @@ export function BuyBox() {
           </p>
           {codSaving > 0 ? (
             <>
-              <p className="text-[15px] font-bold text-ink-faint">
-                {formatINR(product.codPriceInPaise)} on COD
-              </p>
               <span className="rounded-full bg-leaf-soft px-3 py-1 text-xs font-bold text-leaf">
                 Save {formatINR(codSaving)} by paying online
               </span>
@@ -195,11 +192,17 @@ export function BuyBox() {
 
       {/* The three highest-anxiety pre-purchase objections, answered right at
           the buy button — previously buried in the FAQ and spec table. */}
-      <ul className="flex flex-wrap gap-x-5 gap-y-2 pt-1">
-        <TrustChip icon={<Smartphone />}>Works with iPhone & Android</TrustChip>
-        <TrustChip icon={<BadgeCheck />}>No ink or subscription, ever</TrustChip>
-        <TrustChip icon={<Undo2 />}>7-day replacement</TrustChip>
-        <TrustChip icon={<Truck />}>Free shipping</TrustChip>
+      <ul className="flex items-center justify-center gap-3 pt-1">
+        {[
+          { label: "Works with iPhone & Android", icon: Smartphone },
+          { label: "No ink or subscription, ever", icon: BadgeCheck },
+          { label: "7-day replacement", icon: Undo2 },
+          { label: "Free shipping", icon: Truck },
+        ].map(({ label, icon: Icon }) => (
+          <li key={label} title={label} aria-label={label} className="flex size-10 items-center justify-center rounded-full bg-cream text-accent-deep">
+            <Icon className="size-5" aria-hidden />
+          </li>
+        ))}
       </ul>
     </div>
   );
