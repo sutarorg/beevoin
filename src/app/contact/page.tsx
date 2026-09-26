@@ -8,7 +8,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Contact us",
   description:
-    "Get help with your Beevo order — delivery, returns, product questions or anything else. We reply within one business day.",
+    "Get help with your Beevo order — delivery, replacement support, product questions or anything else. We reply within one business day.",
   alternates: { canonical: "/contact" },
 };
 
@@ -21,8 +21,8 @@ export default function ContactPage() {
             Talk to a human
           </h1>
           <p className="text-[15px] leading-relaxed text-ink-soft">
-            Order questions, delivery hiccups, returns, product help — write to
-            us and a real person will get back to you.
+            Order questions, delivery hiccups, replacement support, product help —
+            write to us and a real person will get back to you.
           </p>
         </div>
 

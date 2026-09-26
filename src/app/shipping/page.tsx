@@ -32,8 +32,8 @@ export default function ShippingPage() {
             <P>
               We currently ship within India only. If your pincode is
               temporarily unserviceable by our courier partners, we&apos;ll
-              contact you and either arrange an alternative or cancel with a
-              full refund — your choice.
+              contact you and either arrange an alternative or cancel the
+              unfulfillable order before dispatch.
             </P>
           ),
         },
@@ -84,7 +84,7 @@ export default function ShippingPage() {
               items={[
                 "Couriers typically attempt delivery up to 2–3 times and may call your registered mobile before arriving.",
                 "For COD orders, please keep the order amount ready in cash, or pay by UPI at the door.",
-                "If a delivery fails repeatedly, the package may be returned to us, and for prepaid orders we will refund you after deducting any re-shipping costs.",
+                "If a delivery fails repeatedly, the package may be returned to us. Contact support with your order ID for help.",
               ]}
             />
           ),
@@ -95,9 +95,8 @@ export default function ShippingPage() {
             <P>
               If the outer package or the product looks damaged on arrival,
               refuse delivery if possible, or note the damage and contact us
-              within 48 hours with photos — we&apos;ll arrange a replacement
-              under our Returns & Refunds Policy. Reach us at{" "}
-              {site.supportEmail}.
+              within 48 hours with photos so we can arrange replacement support.
+              Reach us at {site.supportEmail}.
             </P>
           ),
         },

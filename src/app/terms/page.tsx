@@ -39,11 +39,13 @@ export default async function TermsPage() {
             <>
               <P>
                 The product is priced at {formatINR(product.priceInPaise)} per
-                unit, inclusive of GST and all applicable taxes.{" "}
-                {product.shippingInPaise === 0
+                unit for online payment and {formatINR(product.codPriceInPaise)}
+                per unit for Cash on Delivery, inclusive of GST and all
+                applicable taxes. {product.shippingInPaise === 0
                   ? "Shipping is free across serviceable Indian pincodes"
                   : `Shipping is ${formatINR(product.shippingInPaise)}`}{" "}
-                — the total you see at checkout is the total you pay.
+                — the total shown for your selected payment method at checkout
+                is the total you pay.
               </P>
               <P>
                 We don&apos;t inflate MRPs to show fake discounts, and we
@@ -69,11 +71,10 @@ export default async function TermsPage() {
           heading: "Payments",
           body: (
             <P>
-              We accept Cash on Delivery (cash or UPI at your doorstep)
-              {", and online payments (UPI, cards, netbanking and wallets) processed by Razorpay when enabled on the store"}
-              . Payment verification for online payments happens on our
-              servers; an order is confirmed only after successful
-              verification. Failed or unverified payments are not collected,
+              We accept Cash on Delivery (cash or UPI at your doorstep) after
+              mobile OTP verification, {"and online payments (UPI, cards, netbanking and wallets) processed by Razorpay when enabled on the store"}.
+              Payment verification for online payments happens on our servers;
+              an order is confirmed only after successful verification. Failed or unverified payments are not collected,
               and any amount deducted by your bank in such cases is
               automatically reversed by the payment network per its own
               timelines.
@@ -81,12 +82,13 @@ export default async function TermsPage() {
           ),
         },
         {
-          heading: "Shipping, returns and refunds",
+          heading: "Shipping and replacement support",
           body: (
             <P>
-              Delivery timelines, our 7-day replacement promise and refund
-              processes are described in our Shipping Policy and Returns &
-              Refunds Policy, which form part of these terms.
+              Delivery timelines are described in our Shipping Policy. If an
+              item arrives damaged, defective or materially different from its
+              description, contact support with your order ID within 7 days of
+              delivery so we can review replacement support.
             </P>
           ),
         },

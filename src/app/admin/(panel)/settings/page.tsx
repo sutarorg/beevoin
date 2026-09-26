@@ -49,12 +49,22 @@ export default async function AdminSettingsPage() {
       configured: Boolean(
         process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET,
       ),
-      note: "Required for online payments and refunds.",
+      note: "Required for online payments and operational refunds.",
     },
     {
       name: "Razorpay webhook secret",
       configured: Boolean(process.env.RAZORPAY_WEBHOOK_SECRET),
       note: "Required so payments confirm even if the customer closes the tab.",
+    },
+    {
+      name: "Twilio Verify (COD mobile OTP)",
+      configured: Boolean(
+        process.env.TWILIO_ACCOUNT_SID &&
+          process.env.TWILIO_AUTH_TOKEN &&
+          process.env.TWILIO_VERIFY_SERVICE_SID &&
+          (process.env.COD_OTP_TOKEN_SECRET?.length ?? 0) >= 32,
+      ),
+      note: "Required before Cash on Delivery can be selected at checkout.",
     },
     {
       name: "Resend",

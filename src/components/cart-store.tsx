@@ -22,6 +22,7 @@ type CartState = {
   subtotalInPaise: number;
   maxPerOrder: number;
   hydrated: boolean;
+  /** Online-payment subtotal; checkout recalculates by selected method. */
   /** The authoritative product, read from the database on the server. */
   product: StorefrontProduct;
   add: (qty?: number) => void;
@@ -34,7 +35,7 @@ const CartContext = createContext<CartState | null>(null);
 /**
  * Cart + product context.
  *
- * The product (price, max per order, stock) is injected by the server layout
+ * The product (online/COD prices, max per order, stock) is injected by the server layout
  * from the `products` table — the storefront never hard-codes commercial
  * values, and the checkout API re-validates everything anyway.
  */

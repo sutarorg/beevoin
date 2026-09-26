@@ -46,6 +46,7 @@ function toStorefront(product: Product): StorefrontProduct {
     description: product.description,
     shortDescription: product.shortDescription,
     priceInPaise: product.priceInPaise,
+    codPriceInPaise: product.codPriceInPaise,
     currency: product.currency,
     maxPerOrder: product.maxPerOrder,
     shippingInPaise: product.shippingInPaise,

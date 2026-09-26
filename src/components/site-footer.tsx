@@ -18,7 +18,6 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
     links: [
       { href: "/contact", label: "Contact us" },
       { href: "/shipping", label: "Shipping policy" },
-      { href: "/returns", label: "Returns & refunds" },
     ],
   },
   {

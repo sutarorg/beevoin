@@ -354,13 +354,19 @@ export async function updatePriceAction(
     const productId = str(form, "productId");
 
     const priceRupees = Number(str(form, "priceInRupees"));
+    const codPriceRupees = Number(str(form, "codPriceInRupees"));
     const shippingRupees = Number(str(form, "shippingInRupees"));
-    if (!Number.isFinite(priceRupees) || !Number.isFinite(shippingRupees)) {
-      return fail("Enter price and shipping as numbers in rupees.");
+    if (
+      !Number.isFinite(priceRupees) ||
+      !Number.isFinite(codPriceRupees) ||
+      !Number.isFinite(shippingRupees)
+    ) {
+      return fail("Enter online price, COD price and shipping as numbers in rupees.");
     }
 
     const parsed = priceUpdateSchema.safeParse({
       priceInPaise: Math.round(priceRupees * 100),
+      codPriceInPaise: Math.round(codPriceRupees * 100),
       shippingInPaise: Math.round(shippingRupees * 100),
     });
     if (!parsed.success) {
@@ -370,6 +376,7 @@ export async function updatePriceAction(
     const [before] = await db
       .select({
         priceInPaise: products.priceInPaise,
+        codPriceInPaise: products.codPriceInPaise,
         shippingInPaise: products.shippingInPaise,
       })
       .from(products)
@@ -381,6 +388,7 @@ export async function updatePriceAction(
       .update(products)
       .set({
         priceInPaise: parsed.data.priceInPaise,
+        codPriceInPaise: parsed.data.codPriceInPaise,
         shippingInPaise: parsed.data.shippingInPaise,
         updatedAt: new Date(),
       })
@@ -393,6 +401,8 @@ export async function updatePriceAction(
       metadata: {
         fromPriceInPaise: before.priceInPaise,
         toPriceInPaise: parsed.data.priceInPaise,
+        fromCodPriceInPaise: before.codPriceInPaise,
+        toCodPriceInPaise: parsed.data.codPriceInPaise,
         fromShippingInPaise: before.shippingInPaise,
         toShippingInPaise: parsed.data.shippingInPaise,
       },
@@ -402,7 +412,7 @@ export async function updatePriceAction(
     revalidatePath("/admin/product");
     revalidatePath("/");
     return done(
-      `Price updated to ₹${(parsed.data.priceInPaise / 100).toFixed(2)}. Existing orders are unaffected — their totals are historical snapshots.`,
+      `Prices updated to ₹${(parsed.data.priceInPaise / 100).toFixed(2)} online and ₹${(parsed.data.codPriceInPaise / 100).toFixed(2)} for COD. Existing orders are unaffected — their totals are historical snapshots.`,
     );
   } catch (error) {
     return handle(error, "updatePrice");

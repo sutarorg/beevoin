@@ -2,8 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import { Fraunces, Manrope } from "next/font/google";
 import { CartProvider } from "@/components/cart-store";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
+import { SiteShell } from "@/components/site-shell";
 import { site } from "@/lib/config";
 import { getStorefrontProduct } from "@/lib/services/products";
 import { UNAVAILABLE_PRODUCT } from "@/lib/product-types";
@@ -24,7 +23,7 @@ const sans = Manrope({
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: "Beevo Go · Ink-Free Pocket Thermal Printer — ₹1,499 | Beevo",
+    default: "Beevo Go · Ink-Free Pocket Thermal Printer — ₹999 online | Beevo",
     template: "%s · Beevo",
   },
   description: site.description,
@@ -41,14 +40,14 @@ export const metadata: Metadata = {
     type: "website",
     url: site.url,
     siteName: site.name,
-    title: "Beevo Go · Ink-Free Pocket Thermal Printer — ₹1,499",
+    title: "Beevo Go · Ink-Free Pocket Thermal Printer — ₹999 online",
     description: site.description,
     images: [{ url: "/images/og.jpg", width: 1200, height: 630, alt: "Beevo Go mini thermal printer printing a paper strip" }],
     locale: "en_IN",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Beevo Go · Ink-Free Pocket Thermal Printer — ₹1,499",
+    title: "Beevo Go · Ink-Free Pocket Thermal Printer — ₹999 online",
     description: site.description,
     images: ["/images/og.jpg"],
   },
@@ -103,9 +102,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteLd) }}
         />
         <CartProvider product={product}>
-          <SiteHeader />
-          <main id="main">{children}</main>
-          <SiteFooter />
+          <SiteShell>{children}</SiteShell>
         </CartProvider>
       </body>
     </html>

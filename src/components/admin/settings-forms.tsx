@@ -251,10 +251,12 @@ export function ProductForm({ product }: { product: ProductFormValues }) {
 export function PriceForm({
   productId,
   priceInPaise,
+  codPriceInPaise,
   shippingInPaise,
 }: {
   productId: string;
   priceInPaise: number;
+  codPriceInPaise: number;
   shippingInPaise: number;
 }) {
   return (
@@ -266,10 +268,10 @@ export function PriceForm({
             Changing the price affects NEW orders only. Existing orders keep the
             price they were placed at — order history is never rewritten.
           </Notice>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-3">
             <div>
               <Label htmlFor="price" hint="Stored as integer paise.">
-                Price (₹)
+                Online price (₹)
               </Label>
               <input
                 id="price"
@@ -282,6 +284,22 @@ export function PriceForm({
                 className={adminInput}
               />
               <FieldError state={state} name="priceInPaise" />
+            </div>
+            <div>
+              <Label htmlFor="codPrice" hint="Charged only when Cash on Delivery is selected.">
+                COD price (₹)
+              </Label>
+              <input
+                id="codPrice"
+                name="codPriceInRupees"
+                type="number"
+                step="0.01"
+                min="1"
+                defaultValue={(codPriceInPaise / 100).toFixed(2)}
+                required
+                className={adminInput}
+              />
+              <FieldError state={state} name="codPriceInPaise" />
             </div>
             <div>
               <Label htmlFor="shipping" hint="0 for free shipping.">

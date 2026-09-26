@@ -218,9 +218,15 @@ export default async function AdminDashboardPage() {
                 <p className="font-bold text-ink">{product.name}</p>
                 <p className="font-mono text-ink-soft">SKU {product.sku}</p>
                 <p className="flex justify-between">
-                  <span className="text-ink-soft">Price</span>
+                  <span className="text-ink-soft">Online price</span>
                   <span className="font-mono font-bold tabular-nums">
                     {formatINR(product.priceInPaise)}
+                  </span>
+                </p>
+                <p className="flex justify-between">
+                  <span className="text-ink-soft">COD price</span>
+                  <span className="font-mono font-bold tabular-nums">
+                    {formatINR(product.codPriceInPaise)}
                   </span>
                 </p>
                 <p className="flex justify-between">

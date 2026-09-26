@@ -67,8 +67,9 @@ export default async function AdminProductPage() {
         }
       />
 
-      <div className="grid gap-3 sm:grid-cols-4">
-        <StatCard label="Price" value={formatINR(product.priceInPaise)} />
+      <div className="grid gap-3 sm:grid-cols-5">
+        <StatCard label="Online price" value={formatINR(product.priceInPaise)} />
+        <StatCard label="COD price" value={formatINR(product.codPriceInPaise)} />
         <StatCard
           label="Shipping"
           value={
@@ -126,6 +127,7 @@ export default async function AdminProductPage() {
               <PriceForm
                 productId={product.id}
                 priceInPaise={product.priceInPaise}
+                codPriceInPaise={product.codPriceInPaise}
                 shippingInPaise={product.shippingInPaise}
               />
             ) : (
@@ -135,7 +137,7 @@ export default async function AdminProductPage() {
                   always audit-logged.
                 </p>
                 <p className="font-mono font-bold text-ink">
-                  {formatINR(product.priceInPaise)}
+                  Online: {formatINR(product.priceInPaise)} · COD: {formatINR(product.codPriceInPaise)}
                 </p>
               </div>
             )}

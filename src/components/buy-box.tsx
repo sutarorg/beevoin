@@ -34,6 +34,9 @@ export function BuyBox() {
       <div className="min-w-0 space-y-4" data-testid="buy-box">
         <p className="font-display text-[2.1rem] font-bold leading-none tracking-tight text-ink">
           {product.priceInPaise > 0 ? formatINR(product.priceInPaise) : "—"}
+          {product.priceInPaise > 0 ? (
+            <span className="ml-2 font-sans text-sm font-semibold text-ink-faint">online</span>
+          ) : null}
         </p>
         <p className="inline-flex rounded-full bg-chili-soft px-4 py-2 text-sm font-bold text-chili">
           {STOCK_LABELS[product.stockState]}
@@ -56,9 +59,15 @@ export function BuyBox() {
   return (
     <div className="min-w-0 space-y-5" data-testid="buy-box">
       <div className="flex flex-wrap items-end gap-x-3 gap-y-1">
-        <p className="font-display text-[2.1rem] font-bold leading-none tracking-tight text-ink">
-          {formatINR(product.priceInPaise)}
-        </p>
+        <div>
+          <p className="font-display text-[2.1rem] font-bold leading-none tracking-tight text-ink">
+            {formatINR(product.priceInPaise)}
+            <span className="ml-2 font-sans text-sm font-semibold text-leaf">online</span>
+          </p>
+          <p className="mt-1 text-sm font-semibold text-ink-soft">
+            {formatINR(product.codPriceInPaise)} by Cash on Delivery
+          </p>
+        </div>
         <p className="pb-1 text-sm font-semibold text-ink-faint">
           Inclusive of all taxes ·{" "}
           {product.shippingInPaise === 0
@@ -121,7 +130,7 @@ export function BuyBox() {
           className={buttonClasses({ size: "lg" })}
         >
           <Zap className="size-4.5" aria-hidden />
-          Buy now — {formatINR(product.priceInPaise)}
+          Buy now — from {formatINR(product.priceInPaise)}
         </button>
         <button
           type="button"
