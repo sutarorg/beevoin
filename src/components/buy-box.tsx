@@ -64,9 +64,12 @@ export function BuyBox() {
             {formatINR(product.priceInPaise)}
             <span className="ml-2 font-sans text-sm font-semibold text-leaf">online</span>
           </p>
-          <p className="mt-1 text-sm font-semibold text-ink-soft">
-            {formatINR(product.codPriceInPaise)} by Cash on Delivery
-          </p>
+          {/*
+            The Cash-on-Delivery price is deliberately NOT repeated here. It is
+            still shown where it becomes a decision — the cart, the checkout
+            payment selector and the pricing block further down this page — so
+            nothing about the COD total is hidden from the buyer.
+          */}
         </div>
         <p className="pb-1 text-sm font-semibold text-ink-faint">
           Inclusive of all taxes ·{" "}
