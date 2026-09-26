@@ -107,6 +107,9 @@ export function TrackClient({
     if (autoSearched.current) return;
     if (initialOrder && initialKey) {
       autoSearched.current = true;
+      // Genuine external side effect: fetch the order once on arrival from a
+      // tracking link. The state it sets is the fetch result, not derived data.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       void lookup();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { L, LegalPage, P } from "@/components/legal-page";
-import { policies, site } from "@/lib/config";
+import { site } from "@/lib/config";
+import { getStoreSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Shipping policy",
@@ -9,7 +10,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/shipping" },
 };
 
-export default function ShippingPage() {
+export default async function ShippingPage() {
+  const settings = await getStoreSettings();
+
   return (
     <LegalPage
       title="Shipping Policy"
@@ -42,7 +45,7 @@ export default function ShippingPage() {
           body: (
             <P>
               Orders are packed and dispatched within{" "}
-              <strong>{policies.dispatchWindow}</strong>. Orders placed on
+              <strong>{settings.dispatchWindow}</strong>. Orders placed on
               Sundays or public holidays are processed the next working day.
             </P>
           ),
@@ -52,7 +55,7 @@ export default function ShippingPage() {
           body: (
             <>
               <P>
-                Typical delivery takes <strong>{policies.deliveryEstimate}</strong>{" "}
+                Typical delivery takes <strong>{settings.deliveryEstimate}</strong>{" "}
                 after dispatch, depending on your pincode. Metro cities are
                 usually faster; remote/north-eastern locations may take a
                 little longer.
@@ -97,7 +100,7 @@ export default function ShippingPage() {
               refuse delivery if possible, or note the damage and contact us
               within 48 hours with photos — we&apos;ll arrange a replacement
               under our Returns & Refunds Policy. Reach us at{" "}
-              {site.supportEmail}.
+              {settings.supportEmail}.
             </P>
           ),
         },
@@ -106,7 +109,7 @@ export default function ShippingPage() {
           body: (
             <P>
               Address changes are possible only before dispatch. Write to{" "}
-              {site.supportEmail} with your order ID as soon as possible. Once
+              {settings.supportEmail} with your order ID as soon as possible. Once
               an order is with the courier, we can&apos;t modify the delivery
               address.
             </P>

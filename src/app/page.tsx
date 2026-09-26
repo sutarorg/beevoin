@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import {
   BatteryCharging,
@@ -35,13 +34,18 @@ import {
   SectionTitle,
   buttonClasses,
 } from "@/components/ui";
-import { product, site } from "@/lib/config";
+import { site } from "@/lib/config";
+import { getStorefrontProduct } from "@/lib/product";
+import type { ProductView } from "@/lib/product-view";
+import { getStoreSettings } from "@/lib/settings";
+import { ProductPhoto } from "@/components/product-photo";
 import {
-  FAQS,
+  buildFaqs,
   HERO,
   HOW_IT_WORKS,
   IN_THE_BOX,
   SPECS,
+  PRODUCT_IMAGES,
   SPEC_TICKER,
   USE_CASES,
   VALUE_PROPS,
@@ -57,43 +61,69 @@ const VALUE_ICONS: Record<string, LucideIcon> = {
   FlameKindling,
 };
 
-const productLd = {
-  "@context": "https://schema.org",
-  "@type": "Product",
-  name: product.name,
-  sku: product.sku,
-  description:
-    "Palm-size Bluetooth mini thermal printer for ink-free black-and-white printing of notes, labels, lists and QR codes from Android and iOS smartphones. ≈200 DPI, ≈160 g, rechargeable ≈1200 mAh battery.",
-  image: product.images.map((img) => `${site.url}${img.src}`),
-  brand: { "@type": "Brand", name: site.name },
-  material: "ABS plastic",
-  offers: {
-    "@type": "Offer",
-    url: site.url,
-    priceCurrency: "INR",
-    price: "1499",
-    availability: "https://schema.org/InStock",
-    itemCondition: "https://schema.org/NewCondition",
-  },
-};
+/** Structured data built from the live catalogue row — price and availability
+ *  in the markup always match what a customer will actually be charged. */
+function buildProductLd(product: ProductView) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    sku: product.sku,
+    description:
+      "Palm-size Bluetooth mini thermal printer for ink-free black-and-white printing of notes, labels, lists and QR codes from Android and iOS smartphones. ≈200 DPI, ≈160 g, rechargeable ≈1200 mAh battery.",
+    image: product.images.map((img) => `${site.url}${img.src}`),
+    brand: { "@type": "Brand", name: site.name },
+    material: "ABS plastic",
+    offers: {
+      "@type": "Offer",
+      url: site.url,
+      priceCurrency: product.currency,
+      price: (product.priceInPaise / 100).toFixed(2),
+      availability: product.purchasable
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+      itemCondition: "https://schema.org/NewCondition",
+    },
+  };
+}
 
-const faqLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: FAQS.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a },
-  })),
-};
+export default async function HomePage() {
+  const [product, settings] = await Promise.all([
+    getStorefrontProduct(),
+    getStoreSettings(),
+  ]);
 
-export default function HomePage() {
+  const price = product ? formatINR(product.priceInPaise) : "₹1,499";
+  const shortName = product?.shortName ?? "Beevo Go";
+  const images = product?.images.length ? product.images : PRODUCT_IMAGES;
+
+  const faqs = buildFaqs({
+    dispatchWindow: settings.dispatchWindow,
+    deliveryEstimate: settings.deliveryEstimate,
+    replacementWindowDays: settings.replacementWindowDays,
+    productShortName: shortName,
+  });
+
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productLd) }}
-      />
+      {product ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(buildProductLd(product)),
+          }}
+        />
+      ) : null}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
@@ -119,7 +149,7 @@ export default function HomePage() {
           </div>
           <div className="order-1 min-w-0 lg:order-2">
             <div className="relative">
-              <ProductGallery images={product.images} />
+              <ProductGallery images={images} />
               <Badge
                 tone="dark"
                 className="absolute -top-2.5 left-4 rotate-[-4deg] px-4 py-1.5 text-sm shadow-pop"
@@ -159,7 +189,7 @@ export default function HomePage() {
       <Section id="features">
         <Container>
           <div className="max-w-2xl space-y-3">
-            <Eyebrow>Why you'll reach for it daily</Eyebrow>
+            <Eyebrow>Why you&apos;ll reach for it daily</Eyebrow>
             <SectionTitle>
               One little printer, a hundred little prints
             </SectionTitle>
@@ -239,12 +269,10 @@ export default function HomePage() {
                   }
                 >
                   <div className="relative aspect-square overflow-hidden rounded-3xl border border-sandline shadow-lift">
-                    <Image
+                    <ProductPhoto
                       src={use.image}
                       alt={use.alt}
-                      fill
                       sizes="(max-width: 768px) 100vw, 540px"
-                      className="object-cover"
                       loading={i === 0 ? "eager" : "lazy"}
                     />
                   </div>
@@ -273,18 +301,18 @@ export default function HomePage() {
             </Eyebrow>
             <h2 className="font-display text-[1.9rem] font-semibold leading-tight tracking-tight md:text-4xl">
               Everything you need to start printing, for{" "}
-              {formatINR(product.priceInPaise)}.
+              {price}.
             </h2>
             <p className="max-w-md text-[15px] leading-relaxed text-paper/70">
               No fake MRPs, no countdown timers, no hidden charges at checkout.
-              Just {product.shortName}, a starter paper roll and free doorstep
+              Just the {shortName}, a starter paper roll and free doorstep
               delivery anywhere in India — with Cash on Delivery.
             </p>
             <ul className="space-y-2.5 pt-1 text-sm font-bold text-paper/85">
               {[
                 "Free shipping to every serviceable pincode",
                 "Pay online securely, or by cash / UPI on delivery",
-                "7-day replacement promise for defects",
+                `${settings.replacementWindowDays}-day replacement promise for defects`,
               ].map((line) => (
                 <li key={line} className="flex items-center gap-2.5">
                   <ShieldCheck className="size-4.5 shrink-0 text-accent" aria-hidden />
@@ -303,11 +331,9 @@ export default function HomePage() {
               <div className="space-y-2.5 text-[15px]">
                 <p className="flex justify-between gap-4">
                   <span>
-                    {product.shortName} × 1<span className="block text-xs text-ink-faint">Ink-free pocket printer</span>
+                    {shortName} × 1<span className="block text-xs text-ink-faint">Ink-free pocket printer</span>
                   </span>
-                  <span className="font-bold tabular-nums">
-                    {formatINR(product.priceInPaise)}
-                  </span>
+                  <span className="font-bold tabular-nums">{price}</span>
                 </p>
                 <p className="flex justify-between gap-4">
                   <span>Shipping</span>
@@ -324,7 +350,7 @@ export default function HomePage() {
                   Total
                 </span>
                 <span className="font-display text-3xl font-bold tabular-nums">
-                  {formatINR(product.priceInPaise)}
+                  {price}
                 </span>
               </p>
               <Link
@@ -332,7 +358,7 @@ export default function HomePage() {
                 className={buttonClasses({ className: "mt-6 w-full", size: "lg" })}
               >
                 <Zap className="size-4.5" aria-hidden />
-                Buy now — {formatINR(product.priceInPaise)}
+                Buy now — {price}
               </Link>
               <p className="mt-3.5 flex items-center justify-center gap-1.5 text-center text-[12px] font-semibold text-ink-faint">
                 <Lock className="size-3.5" aria-hidden />
@@ -375,12 +401,10 @@ export default function HomePage() {
             <Eyebrow>What&apos;s in the box</Eyebrow>
             <SectionTitle className="mt-3">Open it up</SectionTitle>
             <div className="relative mt-7 aspect-square overflow-hidden rounded-3xl border border-sandline shadow-lift">
-              <Image
+              <ProductPhoto
                 src="/images/box-contents.jpg"
                 alt="Beevo Go box contents: the printer, USB charging cable, a thermal paper roll and the quick-start guide"
-                fill
                 sizes="(max-width: 768px) 100vw, 540px"
-                className="object-cover"
                 loading="lazy"
               />
             </div>
@@ -433,7 +457,7 @@ export default function HomePage() {
               {
                 icon: Mail,
                 title: "Real human support",
-                body: `Write to ${site.supportEmail} — a person replies within one business day, not a bot loop.`,
+                body: `Write to ${settings.supportEmail} — a person replies within one business day, not a bot loop.`,
               },
             ].map((item) => (
               <Card key={item.title} className="p-6">
@@ -481,7 +505,7 @@ export default function HomePage() {
               </Badge>
             </div>
           </div>
-          <Accordion items={FAQS.slice(0, 6)} />
+          <Accordion items={faqs.slice(0, 6)} />
         </Container>
       </Section>
 

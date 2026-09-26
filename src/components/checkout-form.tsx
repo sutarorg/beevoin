@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -15,11 +14,11 @@ import {
   Plus,
   ShoppingBag,
 } from "lucide-react";
-import { product, site } from "@/lib/config";
 import { INDIAN_STATES, checkoutSchema } from "@/lib/validations";
 import { formatINR } from "@/lib/format";
 import { cn } from "@/lib/cn";
-import { useCart } from "./cart-store";
+import { useCart, useProduct } from "./cart-store";
+import { ProductPhoto } from "./product-photo";
 import {
   Card,
   Container,
@@ -77,13 +76,18 @@ function loadRazorpayScript(): Promise<void> {
 export function CheckoutForm({
   razorpayEnabled,
   razorpayKeyId,
+  storeName,
+  dispatchWindow,
 }: {
   razorpayEnabled: boolean;
   razorpayKeyId: string;
+  storeName: string;
+  dispatchWindow: string;
 }) {
   const router = useRouter();
   const { qty, setQty, subtotalInPaise, hydrated, maxPerOrder, clear } =
     useCart();
+  const product = useProduct();
   const [values, setValues] = useState<FormValues>(EMPTY);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -91,7 +95,8 @@ export function CheckoutForm({
   const [submitting, setSubmitting] = useState(false);
   const [statusNote, setStatusNote] = useState<string | null>(null);
 
-  const totalInPaise = subtotalInPaise; // shipping is free
+  // Display only — the server recomputes every paisa from the product row.
+  const totalInPaise = subtotalInPaise + (product?.shippingInPaise ?? 0);
 
   const set =
     (key: keyof FormValues) =>
@@ -173,8 +178,8 @@ export function CheckoutForm({
           key: razorpayKeyId,
           amount: data.razorpay.amount,
           currency: data.razorpay.currency,
-          name: site.name,
-          description: `${product.name} — ${orderNumber}`,
+          name: storeName,
+          description: `${product?.name ?? "Beevo order"} — ${orderNumber}`,
           order_id: data.razorpay.orderId,
           prefill: {
             name: values.name,
@@ -291,7 +296,7 @@ export function CheckoutForm({
                 Nothing to check out yet
               </p>
               <p className="mt-1 text-sm text-ink-soft">
-                Add the {product.shortName} to your cart first.
+                Add the {product?.shortName ?? "Beevo Go"} to your cart first.
               </p>
             </div>
             <Link href="/" className={buttonClasses({ size: "lg" })}>
@@ -528,17 +533,16 @@ export function CheckoutForm({
               <Card className="p-6">
                 <div className="flex gap-4">
                   <span className="relative size-20 shrink-0 overflow-hidden rounded-xl border border-sandline">
-                    <Image
-                      src={product.images[0].src}
-                      alt={product.name}
-                      fill
+                    <ProductPhoto
+                      src={product?.images[0]?.src ?? "/images/product-1.jpg"}
+                      alt={product?.name ?? ""}
                       sizes="80px"
-                      className="object-cover"
+                      compact
                     />
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-[15px] font-extrabold leading-snug text-ink">
-                      {product.name}
+                      {product?.name}
                     </p>
                     <div
                       className="mt-2 inline-flex items-center rounded-full border-[1.5px] border-sandline"
@@ -572,7 +576,7 @@ export function CheckoutForm({
                 <dl className="mt-5 space-y-2.5 border-t border-dashed border-sandline pt-4 text-[15px]">
                   <div className="flex justify-between">
                     <dt className="font-semibold text-ink-soft">
-                      {formatINR(product.priceInPaise)} × {qty}
+                      {formatINR(product?.priceInPaise ?? 0)} × {qty}
                     </dt>
                     <dd className="font-mono font-bold tabular-nums">
                       {formatINR(subtotalInPaise)}
@@ -580,7 +584,11 @@ export function CheckoutForm({
                   </div>
                   <div className="flex justify-between">
                     <dt className="font-semibold text-ink-soft">Shipping</dt>
-                    <dd className="font-bold text-leaf">FREE</dd>
+                    <dd className="font-bold text-leaf">
+                      {product && product.shippingInPaise > 0
+                        ? formatINR(product.shippingInPaise)
+                        : "FREE"}
+                    </dd>
                   </div>
                   <div className="dashed-rule my-1.5" />
                   <div className="flex items-baseline justify-between">
@@ -591,7 +599,7 @@ export function CheckoutForm({
                   </div>
                 </dl>
                 <p className="mt-3 text-[12.5px] font-semibold text-ink-faint">
-                  Inclusive of all taxes · Dispatched within 24–48 hrs
+                  Inclusive of all taxes · Dispatched within {dispatchWindow}
                 </p>
               </Card>
             </aside>

@@ -46,7 +46,5 @@ export async function readJson(request: Request): Promise<unknown | null> {
   }
 }
 
-/** Structured server log — no PII, ever. */
-export function logEvent(event: string, data: Record<string, unknown> = {}) {
-  console.log(JSON.stringify({ event, ...data, at: new Date().toISOString() }));
-}
+/** Structured logging lives in `lib/logger.ts` — re-exported for convenience. */
+export { logEvent, logError } from "./logger";

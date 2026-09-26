@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { L, LegalPage, P } from "@/components/legal-page";
-import { product, site } from "@/lib/config";
+import { site } from "@/lib/config";
+import { getPrimaryProduct } from "@/lib/product";
+import { getStoreSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Terms & conditions",
@@ -9,18 +11,23 @@ export const metadata: Metadata = {
   alternates: { canonical: "/terms" },
 };
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  const [settings, product] = await Promise.all([
+    getStoreSettings(),
+    getPrimaryProduct(),
+  ]);
+
   return (
     <LegalPage
       title="Terms & Conditions"
       updated="February 2026"
-      intro={`These terms govern your use of the ${site.name} website and your purchase of products from ${site.legalName}. By placing an order, you agree to them. Please read them — they're short, in plain language, and free of surprises.`}
+      intro={`These terms govern your use of the ${site.name} website and your purchase of products from ${settings.legalName}. By placing an order, you agree to them. Please read them — they're short, in plain language, and free of surprises.`}
       sections={[
         {
           heading: "The store and the product",
           body: (
             <P>
-              Beevo is a single-product store selling the {product.name}
+              Beevo is a single-product store selling the {product?.name ?? "Beevo Go Mini Thermal Printer"}
               through this website. Product images are representative of the
               product and its use; minor cosmetic differences between batches
               (for example, colour shade or packaging artwork) do not
@@ -52,7 +59,7 @@ export default function TermsPage() {
               items={[
                 "An order is an offer to purchase. It is accepted when we confirm it, and for online payments, after payment is verified by our payment partner on our servers.",
                 "You must provide accurate delivery and contact details; we are not responsible for failed deliveries caused by incorrect information.",
-                `A maximum of ${product.maxPerOrder} units may be purchased per order. We may refuse or cancel orders that appear fraudulent, abusive or intended for unauthorised resale.`,
+                `A maximum of ${product?.maxPerOrder ?? 5} units may be purchased per order. We may refuse or cancel orders that appear fraudulent, abusive or intended for unauthorised resale.`,
                 "Each order gets a unique order ID. Keep it safe — you'll need it (with your registered mobile/email) to track or get support.",
               ]}
             />
@@ -99,7 +106,7 @@ export default function TermsPage() {
           body: (
             <P>
               The Beevo name, logo, website design, text and imagery on this
-              site belong to {site.legalName} or its licensors. You may not
+              site belong to {settings.legalName} or its licensors. You may not
               reuse them for commercial purposes without written permission.
             </P>
           ),
@@ -130,8 +137,8 @@ export default function TermsPage() {
           heading: "Contact",
           body: (
             <P>
-              Questions about these terms? Write to {site.supportEmail}
-              {site.address ? ` or reach us at ${site.address}` : ""}.
+              Questions about these terms? Write to {settings.supportEmail}
+              {settings.businessAddress ? ` or reach us at ${settings.businessAddress}` : ""}.
             </P>
           ),
         },

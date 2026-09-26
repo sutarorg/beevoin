@@ -2,7 +2,7 @@
  * Central marketing & help copy. Every claim here maps to a verified product
  * characteristic or an actual store policy implemented in code.
  */
-import { policies, product } from "./config";
+
 
 export const HERO = {
   eyebrow: "Beevo Go · Pocket Thermal Printer",
@@ -118,7 +118,21 @@ export const IN_THE_BOX = [
   "1 × quick-start guide",
 ];
 
-export const FAQS: { q: string; a: string }[] = [
+export type Faq = { q: string; a: string };
+
+export type FaqContext = {
+  dispatchWindow: string;
+  deliveryEstimate: string;
+  replacementWindowDays: number;
+  productShortName: string;
+};
+
+/**
+ * FAQs are built from live store settings so the answers can never drift from
+ * the policies actually enforced by the checkout and the admin.
+ */
+export function buildFaqs(ctx: FaqContext): Faq[] {
+  return [
   {
     q: "What exactly is the Beevo Go?",
     a: "It's a pocket-size Bluetooth thermal printer. You pair it with your smartphone, create content in a compatible app, and it prints notes, labels, lists, QR codes and simple images on small rolls of thermal paper — all in black and white.",
@@ -169,7 +183,7 @@ export const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "How long does delivery take?",
-    a: `Orders are dispatched within ${policies.dispatchWindow} and usually delivered in ${policies.deliveryEstimate}. You can follow every step on the Track Order page.`,
+    a: `Orders are dispatched within ${ctx.dispatchWindow} and usually delivered in ${ctx.deliveryEstimate}. You can follow every step on the Track Order page.`,
   },
   {
     q: "What if I have a problem with my order?",
@@ -177,13 +191,14 @@ export const FAQS: { q: string; a: string }[] = [
   },
   {
     q: "What is the return policy?",
-    a: `If your printer arrives damaged, defective or not as described, request a replacement or refund within ${policies.replacementWindowDays} days of delivery — details are on the Returns & Refunds page.`,
+    a: `If your printer arrives damaged, defective or not as described, request a replacement or refund within ${ctx.replacementWindowDays} days of delivery — details are on the Returns & Refunds page.`,
   },
   {
-    q: `Is ${product.shortName} covered by warranty?`,
-    a: `We offer a ${policies.replacementWindowDays}-day replacement promise for manufacturing defects. Reach out with your order ID and a short video of the issue and we'll take care of the rest.`,
+    q: `Is the ${ctx.productShortName} covered by warranty?`,
+    a: `We offer a ${ctx.replacementWindowDays}-day replacement promise for manufacturing defects. Reach out with your order ID and a short video of the issue and we'll take care of the rest.`,
   },
-];
+  ];
+}
 
 export const SPEC_TICKER = [
   "Ink-free thermal printing",
@@ -194,4 +209,36 @@ export const SPEC_TICKER = [
   "57 mm paper rolls",
   "Android + iOS compatible",
   "Monochrome output",
+] as const;
+
+/**
+ * Product photography that ships with the codebase (files live in /public).
+ * The database seeds its `products.images` column from this list, so editing
+ * marketing imagery stays a code change while pricing stays a data change.
+ */
+export const PRODUCT_IMAGES = [
+  {
+    src: "/images/product-1.jpg",
+    alt: "Beevo Go mini thermal printer — how it works: select a photo, connect via Bluetooth, load paper and print",
+  },
+  {
+    src: "/images/product-2.jpg",
+    alt: "Beevo Go pocket thermal printer, front view",
+  },
+  {
+    src: "/images/product-3.jpg",
+    alt: "Beevo Go mini printer printing a photo strip from a smartphone",
+  },
+  {
+    src: "/images/product-4.jpg",
+    alt: "Beevo Go portable printer shown with everyday printed moments",
+  },
+  {
+    src: "/images/product-5.jpg",
+    alt: "Beevo Go printer in use for labels, notes and journaling prints",
+  },
+  {
+    src: "/images/product-6.jpg",
+    alt: "Beevo Go mini thermal printer with printed photos and paper roll",
+  },
 ] as const;

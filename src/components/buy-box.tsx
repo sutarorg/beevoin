@@ -12,20 +12,41 @@ import {
   Undo2,
   Zap,
 } from "lucide-react";
-import { product } from "@/lib/config";
 import { formatINR } from "@/lib/format";
+import { STOCK_LABEL } from "@/lib/product-view";
 import { buttonClasses, TrustChip } from "./ui";
-import { useCart } from "./cart-store";
+import { useCart, useProduct } from "./cart-store";
 
 export function BuyBox() {
   const router = useRouter();
   const { add, setQty } = useCart();
+  const product = useProduct();
   const [qty, setLocalQty] = useState(1);
 
   const buyNow = () => {
     setQty(qty);
     router.push("/checkout");
   };
+
+  if (!product || !product.purchasable) {
+    return (
+      <div className="min-w-0 space-y-4" data-testid="buy-box">
+        <p className="font-display text-[2.1rem] font-bold leading-none tracking-tight text-ink">
+          {product ? formatINR(product.priceInPaise) : "—"}
+        </p>
+        <p className="rounded-xl bg-cream px-4 py-3 text-sm font-semibold text-ink-soft">
+          {product
+            ? `${STOCK_LABEL[product.stockState]} — we're restocking. Write to us and we'll tell you the moment it's back.`
+            : "This product is currently unavailable."}
+        </p>
+        <a href="/contact" className={buttonClasses({ variant: "secondary" })}>
+          Notify me
+        </a>
+      </div>
+    );
+  }
+
+  const maxQty = product.maxOrderableQuantity;
 
   return (
     <div className="min-w-0 space-y-5" data-testid="buy-box">
@@ -65,9 +86,9 @@ export function BuyBox() {
           <button
             type="button"
             onClick={() =>
-              setLocalQty((q) => Math.min(product.maxPerOrder, q + 1))
+              setLocalQty((q) => Math.min(maxQty, q + 1))
             }
-            disabled={qty >= product.maxPerOrder}
+            disabled={qty >= maxQty}
             className="p-3 text-ink transition disabled:opacity-30"
             aria-label="Increase quantity"
           >
@@ -75,7 +96,7 @@ export function BuyBox() {
           </button>
         </div>
         <span className="text-xs font-semibold text-ink-faint">
-          Max {product.maxPerOrder} per order
+          Max {maxQty} per order
         </span>
       </div>
 

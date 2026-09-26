@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { L, LegalPage, P } from "@/components/legal-page";
-import { policies, site } from "@/lib/config";
+import { getStoreSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Returns & refund policy",
@@ -9,19 +9,21 @@ export const metadata: Metadata = {
   alternates: { canonical: "/returns" },
 };
 
-export default function ReturnsPage() {
+export default async function ReturnsPage() {
+  const settings = await getStoreSettings();
+
   return (
     <LegalPage
       title="Returns & Refund Policy"
       updated="February 2026"
-      intro={`We want you to trust buying online. If something is wrong with your Beevo Go, this policy explains — without fine print — what we will do about it within ${policies.replacementWindowDays} days of delivery.`}
+      intro={`We want you to trust buying online. If something is wrong with your Beevo Go, this policy explains — without fine print — what we will do about it within ${settings.replacementWindowDays} days of delivery.`}
       sections={[
         {
           heading: "The 7-day promise",
           body: (
             <P>
               You can request a <strong>replacement or refund</strong> within{" "}
-              {policies.replacementWindowDays} days of delivery if the
+              {settings.replacementWindowDays} days of delivery if the
               product:
             </P>
           ),
@@ -57,7 +59,7 @@ export default function ReturnsPage() {
           body: (
             <L
               items={[
-                `Email ${site.supportEmail} or use the contact form within 7 days of delivery.`,
+                `Email ${settings.supportEmail} or use the contact form within 7 days of delivery.`,
                 "Include your order ID, registered mobile number and a short unedited video or clear photos showing the issue while the product is unboxed/powered on.",
                 "Our team verifies the claim — usually within 1–2 business days — and confirms the next step by email.",
                 "For approved claims, we arrange a reverse pickup or share a self-ship address. Keep all box contents and packaging.",

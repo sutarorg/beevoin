@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Accordion } from "@/components/accordion";
 import { Container, Eyebrow, Section, SectionTitle } from "@/components/ui";
-import { FAQS } from "@/lib/content";
-import { site } from "@/lib/config";
+import { buildFaqs } from "@/lib/content";
+import { getStorefrontProduct } from "@/lib/product";
+import { getStoreSettings } from "@/lib/settings";
 
 export const metadata: Metadata = {
   title: "Frequently asked questions",
@@ -12,17 +13,29 @@ export const metadata: Metadata = {
   alternates: { canonical: "/faq" },
 };
 
-const faqLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: FAQS.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a },
-  })),
-};
+export default async function FaqPage() {
+  const [settings, product] = await Promise.all([
+    getStoreSettings(),
+    getStorefrontProduct(),
+  ]);
 
-export default function FaqPage() {
+  const faqs = buildFaqs({
+    dispatchWindow: settings.dispatchWindow,
+    deliveryEstimate: settings.deliveryEstimate,
+    replacementWindowDays: settings.replacementWindowDays,
+    productShortName: product?.shortName ?? "Beevo Go",
+  });
+
+  const faqLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+
   return (
     <Section className="pt-10 md:pt-14">
       <script
@@ -41,10 +54,10 @@ export default function FaqPage() {
           >
             Contact us
           </Link>{" "}
-          — {site.supportHours}.
+          — {settings.supportHours}.
         </p>
         <div className="mt-8">
-          <Accordion items={FAQS} />
+          <Accordion items={faqs} />
         </div>
       </Container>
     </Section>
