@@ -18,6 +18,8 @@
   --color-chili-soft: #fbe9e7;
   --color-haldi: #8a5c00;
   --color-haldi-soft: #fdf3dc;
+  /* Review stars — a turmeric gold that sits between accent and haldi. */
+  --color-star: #e9a020;
 
   /* System font stacks keep builds self-contained and avoid a render-blocking
      third-party font request on first visits. */

@@ -44,7 +44,7 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-sandline bg-cream/60">
+    <footer id="site-footer" className="border-t border-sandline bg-cream/60">
       <Container className="py-12 md:py-16">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1.2fr_1fr_1fr]">
           <div className="max-w-sm space-y-4">

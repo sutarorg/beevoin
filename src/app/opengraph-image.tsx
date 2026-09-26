@@ -57,13 +57,13 @@ export default function OpenGraphImage() {
             style={{
               display: "flex",
               fontFamily: "serif",
-              fontSize: 75,
+              fontSize: 70,
               fontWeight: 700,
               letterSpacing: "-3px",
               lineHeight: 1.03,
             }}
           >
-            Print anything. No ink, ever.
+            Notes, labels & memories — in your hand in seconds.
           </div>
           <div
             style={{
@@ -74,7 +74,7 @@ export default function OpenGraphImage() {
               marginTop: 27,
             }}
           >
-            Notes, labels, lists and QR codes from your phone.
+            Printed straight from your phone. No ink, ever.
           </div>
         </div>
         <div

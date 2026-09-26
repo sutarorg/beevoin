@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Star } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 /* ---------- Layout ---------- */
@@ -156,6 +157,48 @@ export function TrustChip({
         {icon}
       </span>
       {children}
+    </span>
+  );
+}
+
+/**
+ * Five-star rating with fractional fill (4.8 → four full stars + 80% of the
+ * fifth). Empty stars use sandline so the row stays visible on white cards.
+ */
+export function StarRating({
+  rating,
+  className,
+  starClassName,
+}: {
+  rating: number;
+  className?: string;
+  starClassName?: string;
+}) {
+  const pct = Math.max(0, Math.min(100, (rating / 5) * 100));
+  const stars = (fill: boolean) =>
+    Array.from({ length: 5 }, (_, i) => (
+      <Star
+        key={i}
+        aria-hidden
+        className={cn("size-4 shrink-0", starClassName)}
+        fill={fill ? "currentColor" : "none"}
+        strokeWidth={fill ? 0 : 1.75}
+      />
+    ));
+  return (
+    <span
+      className={cn("relative inline-flex", className)}
+      role="img"
+      aria-label={`Rated ${rating} out of 5 stars`}
+    >
+      <span className="flex gap-0.5 text-sandline">{stars(false)}</span>
+      <span
+        className="absolute inset-y-0 left-0 overflow-hidden text-star"
+        style={{ width: `${pct}%` }}
+        aria-hidden
+      >
+        <span className="flex w-max gap-0.5">{stars(true)}</span>
+      </span>
     </span>
   );
 }

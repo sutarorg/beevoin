@@ -660,6 +660,7 @@ The database already has the tables but no `__drizzle_migrations` bookkeeping. R
 
 - [ ] Legal name and address correct on terms, privacy, shipping and returns
 - [ ] Support email and hours correct in /admin → Settings
+- [ ] Reviews and social-proof numbers in `src/lib/content.ts` (`SOCIAL_PROOF`, `REVIEWS`) replaced with real, permissioned customer data — the shipped values are realistic placeholders and must never go live as-is
 
 **Final**
 

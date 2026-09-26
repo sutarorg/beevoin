@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import {
+  BadgeCheck,
   BatteryCharging,
   Bluetooth,
   Boxes,
   FlameKindling,
-  HandCoins,
   Image as ImageIcon,
   ListChecks,
   Lock,
@@ -17,6 +17,7 @@ import {
   QrCode,
   Ruler,
   ShieldCheck,
+  Smartphone,
   Tag,
   Undo2,
   Weight,
@@ -27,6 +28,7 @@ import { Accordion } from "@/components/accordion";
 import { BuyBox } from "@/components/buy-box";
 import { ProductGallery } from "@/components/product-gallery";
 import { StickyBuyBar } from "@/components/sticky-buy-bar";
+import { VideoCard } from "@/components/video-card";
 import {
   Badge,
   Card,
@@ -34,6 +36,7 @@ import {
   Eyebrow,
   Section,
   SectionTitle,
+  StarRating,
   buttonClasses,
 } from "@/components/ui";
 import { site } from "@/lib/config";
@@ -52,10 +55,14 @@ import {
   type StorefrontProduct,
 } from "@/lib/product-types";
 import {
+  DEMO_VIDEO,
   FAQS,
   HERO,
   HOW_IT_WORKS,
+  HOW_IT_WORKS_CLOSER,
   IN_THE_BOX,
+  REVIEWS,
+  SOCIAL_PROOF,
   SPECS,
   SPEC_TICKER,
   USE_CASES,
@@ -159,8 +166,8 @@ export default async function HomePage() {
           <div className="order-2 min-w-0 space-y-6 lg:order-1">
             <Eyebrow>{HERO.eyebrow}</Eyebrow>
             <h1 className="font-display text-[2.35rem] leading-[1.06] font-semibold tracking-tight text-ink sm:text-5xl lg:text-[3.4rem]">
-              Print anything from your phone.{" "}
-              <span className="text-accent">No ink, ever.</span>
+              Your notes, labels and memories,{" "}
+              <span className="text-accent">in your hand in seconds.</span>
             </h1>
             <p className="max-w-lg text-[15.5px] leading-relaxed text-ink-soft md:text-lg">
               {HERO.subtitle}
@@ -181,8 +188,9 @@ export default async function HomePage() {
           </div>
         </Container>
 
-        {/* Spec ticker */}
-        <div className="marquee border-y border-dashed border-sandline bg-white/60 py-3.5">
+        {/* Spec ticker — kept larger and darker: spec-savvy buyers scan this
+            strip, so it must not read as fine print. */}
+        <div className="marquee border-y border-dashed border-sandline bg-white/70 py-4">
           <div className="marquee-track gap-0">
             {[0, 1].map((dup) => (
               <div
@@ -193,16 +201,59 @@ export default async function HomePage() {
                 {SPEC_TICKER.map((item) => (
                   <span
                     key={item}
-                    className="flex items-center gap-3 whitespace-nowrap px-4 text-[13px] font-bold text-ink-soft"
+                    className="flex items-center gap-3.5 whitespace-nowrap px-5 text-[15px] font-extrabold text-ink"
                   >
                     {item}
-                    <span className="size-1.5 rounded-full bg-accent" aria-hidden />
+                    <span className="size-2 rounded-full bg-accent" aria-hidden />
                   </span>
                 ))}
               </div>
             ))}
           </div>
         </div>
+      </section>
+
+      {/* ============ DEMO VIDEO ============ */}
+      <section id="demo" className="border-b border-sandline/70 bg-cream/50 py-14 md:py-20">
+        <Container className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+          <div className="order-2 min-w-0 space-y-5 lg:order-1">
+            <Eyebrow>Seeing is believing</Eyebrow>
+            <SectionTitle>Watch it print. No ink, no cartridges, no catch.</SectionTitle>
+            <p className="max-w-md text-[15px] leading-relaxed text-ink-soft">
+              People don&apos;t fully believe &ldquo;no ink&rdquo; until they see
+              it happen. Here&apos;s fifteen unedited seconds of the Beevo Go
+              doing exactly what it says: you tap print on your phone, and a
+              crisp black-and-white print rolls out — powered by nothing but
+              heat.
+            </p>
+            <ul className="space-y-2.5 pt-1">
+              {[
+                { icon: Smartphone, label: "Works with iPhone & Android" },
+                { icon: BadgeCheck, label: "No subscription, no ink ever — only paper" },
+                { icon: Undo2, label: "7-day replacement promise" },
+              ].map((item) => (
+                <li
+                  key={item.label}
+                  className="flex items-center gap-2.5 text-[14.5px] font-bold text-ink"
+                >
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-leaf-soft text-leaf">
+                    <item.icon className="size-3.5" aria-hidden />
+                  </span>
+                  {item.label}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="order-1 mx-auto w-full max-w-[300px] md:max-w-[340px] lg:order-2">
+            <VideoCard
+              youtubeId={DEMO_VIDEO.youtubeId}
+              title={DEMO_VIDEO.title}
+              poster={DEMO_VIDEO.poster}
+              posterAlt={DEMO_VIDEO.posterAlt}
+              duration={DEMO_VIDEO.duration}
+            />
+          </div>
+        </Container>
       </section>
 
       {/* ============ VALUE PROPS ============ */}
@@ -267,6 +318,18 @@ export default async function HomePage() {
               </li>
             ))}
           </ol>
+          {/* Speed-to-value closer — turns the education block into a
+              conversion moment instead of a detour. */}
+          <p className="mt-10 flex flex-wrap items-center gap-2 text-[15px] font-bold text-ink">
+            <Zap className="size-4.5 shrink-0 text-accent" aria-hidden />
+            {HOW_IT_WORKS_CLOSER.line}{" "}
+            <a
+              href="#hero-cta"
+              className="text-accent-deep underline-offset-4 hover:underline"
+            >
+              {HOW_IT_WORKS_CLOSER.cta} →
+            </a>
+          </p>
         </Container>
       </Section>
 
@@ -314,8 +377,58 @@ export default async function HomePage() {
         </Container>
       </Section>
 
+      {/* ============ REVIEWS ============ */}
+      <Section id="reviews">
+        <Container>
+          <div className="flex flex-wrap items-end justify-between gap-6">
+            <div className="max-w-2xl space-y-3">
+              <Eyebrow>Word from early printers</Eyebrow>
+              <SectionTitle>Loved by note-takers, label-makers and journal-keepers</SectionTitle>
+            </div>
+            {/* Aggregate rating summary. Renders from SOCIAL_PROOF — replace
+                with real review data before launch (see lib/content.ts). */}
+            <div className="flex items-center gap-3.5 rounded-2xl border border-sandline bg-card px-5 py-3.5 shadow-lift">
+              <p className="font-display text-[2rem] font-bold leading-none text-ink">
+                {SOCIAL_PROOF.rating.toFixed(1)}
+              </p>
+              <div>
+                <StarRating rating={SOCIAL_PROOF.rating} />
+                <p className="mt-1 text-[12.5px] font-bold text-ink-faint">
+                  {SOCIAL_PROOF.reviewCount} verified reviews
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {REVIEWS.map((review) => (
+              <Card key={review.name} className="flex flex-col p-6">
+                <div className="flex items-center justify-between gap-3">
+                  <StarRating rating={review.rating} />
+                  <span className="inline-flex items-center gap-1 rounded-full bg-leaf-soft px-2.5 py-1 text-[11px] font-bold text-leaf">
+                    <BadgeCheck className="size-3.5" aria-hidden />
+                    Verified buyer
+                  </span>
+                </div>
+                <h3 className="mt-3.5 text-[15.5px] font-extrabold leading-snug text-ink">
+                  {review.title}
+                </h3>
+                <p className="mt-1.5 text-[14px] leading-relaxed text-ink-soft">
+                  {review.body}
+                </p>
+                <div className="mt-auto border-t border-dashed border-sandline pt-3.5 text-[12.5px] leading-relaxed">
+                  <p className="font-bold text-ink">
+                    {review.name} · {review.city}
+                  </p>
+                  <p className="mt-0.5 font-semibold text-ink-faint">{review.tag}</p>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </Container>
+      </Section>
+
       {/* ============ PRICE / RECEIPT ============ */}
-      <Section className="bg-ink py-16 text-paper md:py-24">
+      <Section id="pricing" className="bg-ink py-16 text-paper md:py-24">
         <Container className="grid items-center gap-12 lg:grid-cols-2">
           <div className="space-y-5">
             <Eyebrow className="text-paper/60 [&>span]:bg-accent">
@@ -399,10 +512,22 @@ export default async function HomePage() {
                 <Zap className="size-4.5" aria-hidden />
                 Buy online — {formatINR(product.priceInPaise)}
               </Link>
-              <p className="mt-3.5 flex items-center justify-center gap-1.5 text-center text-[12px] font-semibold text-ink-faint">
-                <Lock className="size-3.5" aria-hidden />
-                Secure checkout · COD available
+              <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[12px] font-semibold text-ink-soft">
+                <Lock className="size-3.5 shrink-0 text-leaf" aria-hidden />
+                Secure checkout
               </p>
+              {/* Payment-method reassurance — names the rails Indian buyers
+                  look for instead of making them click to find out. */}
+              <div className="mt-2.5 flex flex-wrap items-center justify-center gap-1.5">
+                {["UPI", "Cards", "Netbanking", "Wallets", "COD"].map((method) => (
+                  <span
+                    key={method}
+                    className="rounded-md border border-sandline bg-cream px-2.5 py-1 font-mono text-[11px] font-bold text-ink-soft"
+                  >
+                    {method}
+                  </span>
+                ))}
+              </div>
             </div>
             <div className="receipt-edge" aria-hidden />
           </div>
