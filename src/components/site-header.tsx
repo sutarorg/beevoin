@@ -46,7 +46,8 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-sandline/70 bg-paper/85 shadow-[0_1px_0_rgb(255_255_255/0.7)] backdrop-blur-xl">
-      <p className="bg-ink px-4 py-2 text-center text-[12px] font-bold tracking-wide text-paper">
+      <div className="overflow-x-auto bg-ink px-4 py-2 text-[12px] font-bold tracking-wide text-paper [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <p className="mx-auto w-max whitespace-nowrap">
         Free shipping across India
         <span className="mx-2 text-accent" aria-hidden>
           •
@@ -56,7 +57,8 @@ export function SiteHeader() {
           •
         </span>
         COD available
-      </p>
+        </p>
+      </div>
       <div className="mx-auto flex h-16 w-full max-w-[1180px] items-center justify-between gap-3 px-5 sm:px-6 md:px-8">
         <Link
           href="/"

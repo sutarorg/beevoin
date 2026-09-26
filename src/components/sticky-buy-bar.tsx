@@ -94,9 +94,9 @@ export function StickyBuyBar() {
             {product.shortName} Mini Printer
           </p>
           <p className="flex flex-wrap items-center gap-x-2 font-mono text-[15px] font-bold text-ink">
-            {formatINR(product.priceInPaise)} online
+            {formatINR(product.priceInPaise)}<span className="hidden md:inline"> online</span>
             {codSaving > 0 ? (
-              <span className="rounded-full bg-leaf-soft px-2 py-0.5 font-sans text-[11px] font-bold text-leaf">
+              <span className="hidden rounded-full bg-leaf-soft px-2 py-0.5 font-sans text-[11px] font-bold text-leaf md:inline-flex">
                 Save {formatINR(codSaving)} vs COD
               </span>
             ) : null}

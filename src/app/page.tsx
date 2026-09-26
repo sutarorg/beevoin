@@ -184,8 +184,8 @@ export default async function HomePage() {
             </div>
             <Eyebrow>{HERO.eyebrow}</Eyebrow>
             <h1 className="max-w-2xl font-display text-[2.55rem] font-extrabold leading-[1.04] tracking-[-0.055em] text-ink sm:text-5xl lg:text-[3.75rem]">
-              Your notes, labels and memories,{" "}
-              <span className="text-accent">in your hand in seconds.</span>
+              Your memories,{" "}
+              <span className="text-accent">printed in seconds.</span>
             </h1>
             <p className="max-w-xl text-base leading-relaxed text-ink-soft md:text-lg">
               {HERO.subtitle}
@@ -198,12 +198,13 @@ export default async function HomePage() {
               ].map((item) => (
                 <div
                   key={item.label}
-                  className="flex items-center gap-2 rounded-2xl border border-sandline/70 bg-white/70 px-3 py-2.5 text-[13px] font-extrabold text-ink shadow-lift backdrop-blur"
+                  className="flex items-center justify-center rounded-2xl border border-sandline/70 bg-white/70 p-3 text-ink shadow-lift backdrop-blur"
+                  aria-label={item.label}
+                  title={item.label}
                 >
-                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent-deep">
-                    <item.icon className="size-3.5" aria-hidden />
+                  <span className="flex size-9 items-center justify-center rounded-full bg-accent-soft text-accent-deep">
+                    <item.icon className="size-5" aria-hidden />
                   </span>
-                  {item.label}
                 </div>
               ))}
             </div>
@@ -466,11 +467,12 @@ export default async function HomePage() {
                 <p className="mt-1.5 text-[14px] leading-relaxed text-ink-soft">
                   {review.body}
                 </p>
-                <div className="mt-auto border-t border-dashed border-sandline pt-3.5 text-[12.5px] leading-relaxed">
-                  <p className="font-bold text-ink">
+                <div className="mt-auto flex items-center gap-3 border-t border-dashed border-sandline pt-3.5 text-[12.5px] leading-relaxed">
+                  <Image src={review.avatar} alt="" width={42} height={42} className="size-10 shrink-0 rounded-full border border-sandline bg-cream object-cover" />
+                  <div><p className="font-bold text-ink">
                     {review.name} · {review.city}
                   </p>
-                  <p className="mt-0.5 font-semibold text-ink-faint">{review.tag}</p>
+                  <p className="mt-0.5 font-semibold text-ink-faint">{review.tag}</p></div>
                 </div>
               </Card>
             ))}
@@ -527,12 +529,6 @@ export default async function HomePage() {
                   </span>
                 </p>
                 <p className="flex justify-between gap-4">
-                  <span>Cash on Delivery × 1<span className="block text-xs text-ink-faint">Pay at your doorstep</span></span>
-                  <span className="font-bold tabular-nums">
-                    {formatINR(product.codPriceInPaise)}
-                  </span>
-                </p>
-                <p className="flex justify-between gap-4">
                   <span>Shipping</span>
                   <span
                     className={
@@ -565,7 +561,7 @@ export default async function HomePage() {
                 className={buttonClasses({ className: "mt-6 w-full", size: "lg" })}
               >
                 <Zap className="size-4.5" aria-hidden />
-                Buy online — {formatINR(product.priceInPaise)}
+                Order Now
               </Link>
               <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[12px] font-semibold text-ink-soft">
                 <Lock className="size-3.5 shrink-0 text-leaf" aria-hidden />
@@ -584,7 +580,7 @@ export default async function HomePage() {
                 ))}
               </div>
             </div>
-            <div className="receipt-edge" aria-hidden />
+            <div className="receipt-edge drop-shadow-[0_12px_12px_rgba(0,0,0,0.28)]" aria-hidden />
           </div>
         </Container>
       </Section>

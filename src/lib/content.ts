@@ -135,6 +135,7 @@ export const SOCIAL_PROOF = {
 export const REVIEWS = [
   {
     name: "Ananya M.",
+    avatar: "/images/reviews/ananya.svg",
     city: "Pune",
     rating: 5,
     title: "Formula strips everywhere",
@@ -143,6 +144,7 @@ export const REVIEWS = [
   },
   {
     name: "Rohit S.",
+    avatar: "/images/reviews/rohit.svg",
     city: "Bengaluru",
     rating: 5,
     title: "Labelled the whole flat in one evening",
@@ -151,6 +153,7 @@ export const REVIEWS = [
   },
   {
     name: "Meera K.",
+    avatar: "/images/reviews/meera.svg",
     city: "Kochi",
     rating: 5,
     title: "Retro photos in my journal",
@@ -159,6 +162,7 @@ export const REVIEWS = [
   },
   {
     name: "Arjun D.",
+    avatar: "/images/reviews/arjun.svg",
     city: "Delhi",
     rating: 4,
     title: "Bought it for the novelty, use it daily",
@@ -167,6 +171,7 @@ export const REVIEWS = [
   },
   {
     name: "Priya N.",
+    avatar: "/images/reviews/priya.svg",
     city: "Hyderabad",
     rating: 5,
     title: "Amma's medicine schedule, on the fridge",
@@ -175,6 +180,7 @@ export const REVIEWS = [
   },
   {
     name: "Sana F.",
+    avatar: "/images/reviews/sana.svg",
     city: "Mumbai",
     rating: 5,
     title: "QR menus for our café in an afternoon",

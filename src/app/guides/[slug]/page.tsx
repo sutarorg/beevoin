@@ -76,7 +76,7 @@ export default async function GuidePage({ params }: Params) {
   const path = `/guides/${guide.slug}`;
   const crumbs: Crumb[] = [
     { name: "Home", path: "/" },
-    { name: "Guides", path: "/guides" },
+    { name: "Guide", path: "/guides" },
     { name: guide.title, path },
   ];
 
