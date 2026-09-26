@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build && npm run db:seed",
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
@@ -43,4 +43,4 @@
     "tsx": "^4.23.15",
     "typescript": "5.9.3"
   }
-}
+
