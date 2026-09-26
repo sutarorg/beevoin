@@ -17,6 +17,8 @@ export default async function TermsPage() {
 
   return (
     <LegalPage
+      path="/terms"
+      description={"The terms that govern your use of the Beevo website and purchases of the Beevo Go mini thermal printer, in plain language."}
       title="Terms & Conditions"
       updated="February 2026"
       intro={`These terms govern your use of the ${site.name} website and your purchase of products from ${site.legalName}. By placing an order, you agree to them. Please read them — they're short, in plain language, and free of surprises.`}
