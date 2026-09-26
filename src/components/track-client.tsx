@@ -107,6 +107,7 @@ export function TrackClient({
     if (autoSearched.current) return;
     if (initialOrder && initialKey) {
       autoSearched.current = true;
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- one-shot fetch triggered by the deep link in the URL
       void lookup();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

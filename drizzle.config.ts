@@ -2,15 +2,19 @@ import "dotenv/config";
 import { defineConfig } from "drizzle-kit";
 
 /**
- * Schema-management config. Uses POSTGRES_URL (Vercel/Neon) or DATABASE_URL,
- * falling back to the local sandbox database.
+ * Drizzle schema-management config.
  *
- * Push schema to a remote database without touching .env:
- *   POSTGRES_URL="postgres://...neon.tech/..." npx drizzle-kit push
+ * Migrations are the production path (`npm run db:migrate`). `drizzle-kit
+ * generate` writes new SQL files into ./drizzle; never use `push` against a
+ * production database.
+ *
+ * Connection resolution matches src/db/index.ts: POSTGRES_URL (the Vercel /
+ * Neon integration) wins, then DATABASE_URL.
  */
 export default defineConfig({
   dialect: "postgresql",
   schema: "./src/db/schema.ts",
+  out: "./drizzle",
   dbCredentials: {
     url:
       process.env.POSTGRES_URL ??

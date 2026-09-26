@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { product } from "@/lib/config";
 import { formatINR } from "@/lib/format";
 import { useCart } from "./cart-store";
 
@@ -14,7 +13,7 @@ import { useCart } from "./cart-store";
  */
 export function StickyBuyBar() {
   const router = useRouter();
-  const { setQty } = useCart();
+  const { setQty, product } = useCart();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -35,6 +34,8 @@ export function StickyBuyBar() {
     router.push("/checkout");
   };
 
+  if (!product.purchasable) return null;
+
   return (
     <div
       aria-hidden={!visible}
@@ -46,7 +47,7 @@ export function StickyBuyBar() {
       <div className="flex items-center gap-3 px-4 py-2.5">
         <span className="relative size-11 shrink-0 overflow-hidden rounded-xl border border-sandline">
           <Image
-            src={product.images[0].src}
+            src={product.images[0]?.src ?? "/images/product-1.jpg"}
             alt=""
             fill
             sizes="44px"
@@ -59,9 +60,11 @@ export function StickyBuyBar() {
           </p>
           <p className="font-mono text-[15px] font-bold text-ink">
             {formatINR(product.priceInPaise)}
-            <span className="ml-1.5 font-sans text-[11px] font-semibold text-leaf">
-              Free shipping
-            </span>
+            {product.shippingInPaise === 0 ? (
+              <span className="ml-1.5 font-sans text-[11px] font-semibold text-leaf">
+                Free shipping
+              </span>
+            ) : null}
           </p>
         </div>
         <button

@@ -35,7 +35,12 @@ import {
   SectionTitle,
   buttonClasses,
 } from "@/components/ui";
-import { product, site } from "@/lib/config";
+import { site } from "@/lib/config";
+import { getStorefrontProduct } from "@/lib/services/products";
+import {
+  UNAVAILABLE_PRODUCT,
+  type StorefrontProduct,
+} from "@/lib/product-types";
 import {
   FAQS,
   HERO,
@@ -57,25 +62,37 @@ const VALUE_ICONS: Record<string, LucideIcon> = {
   FlameKindling,
 };
 
-const productLd = {
-  "@context": "https://schema.org",
-  "@type": "Product",
-  name: product.name,
-  sku: product.sku,
-  description:
-    "Palm-size Bluetooth mini thermal printer for ink-free black-and-white printing of notes, labels, lists and QR codes from Android and iOS smartphones. ≈200 DPI, ≈160 g, rechargeable ≈1200 mAh battery.",
-  image: product.images.map((img) => `${site.url}${img.src}`),
-  brand: { "@type": "Brand", name: site.name },
-  material: "ABS plastic",
-  offers: {
-    "@type": "Offer",
-    url: site.url,
-    priceCurrency: "INR",
-    price: "1499",
-    availability: "https://schema.org/InStock",
-    itemCondition: "https://schema.org/NewCondition",
-  },
-};
+/**
+ * Product structured data, built from the authoritative database row so the
+ * price and availability Google sees always match the real store.
+ */
+function buildProductLd(product: StorefrontProduct) {
+  const availability =
+    product.stockState === "in_stock" || product.stockState === "low_stock"
+      ? "https://schema.org/InStock"
+      : "https://schema.org/OutOfStock";
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    sku: product.sku,
+    description:
+      "Palm-size Bluetooth mini thermal printer for ink-free black-and-white printing of notes, labels, lists and QR codes from Android and iOS smartphones. \u2248200 DPI, \u2248160 g, rechargeable \u22481200 mAh battery.",
+    image: product.images.map((img) => `${site.url}${img.src}`),
+    brand: { "@type": "Brand", name: site.name },
+    material: "ABS plastic",
+    offers: {
+      "@type": "Offer",
+      url: site.url,
+      priceCurrency: product.currency,
+      // Schema.org prices are major units; our source of truth is paise.
+      price: (product.priceInPaise / 100).toFixed(2),
+      availability,
+      itemCondition: "https://schema.org/NewCondition",
+    },
+  };
+}
 
 const faqLd = {
   "@context": "https://schema.org",
@@ -87,7 +104,10 @@ const faqLd = {
   })),
 };
 
-export default function HomePage() {
+export default async function HomePage() {
+  // Cached read of the single authoritative product row.
+  const product = (await getStorefrontProduct()) ?? UNAVAILABLE_PRODUCT;
+  const productLd = buildProductLd(product);
   return (
     <>
       <script
@@ -159,7 +179,7 @@ export default function HomePage() {
       <Section id="features">
         <Container>
           <div className="max-w-2xl space-y-3">
-            <Eyebrow>Why you'll reach for it daily</Eyebrow>
+            <Eyebrow>Why you&apos;ll reach for it daily</Eyebrow>
             <SectionTitle>
               One little printer, a hundred little prints
             </SectionTitle>
@@ -311,7 +331,17 @@ export default function HomePage() {
                 </p>
                 <p className="flex justify-between gap-4">
                   <span>Shipping</span>
-                  <span className="font-bold text-leaf">FREE</span>
+                  <span
+                    className={
+                      product.shippingInPaise === 0
+                        ? "font-bold text-leaf"
+                        : "font-bold tabular-nums"
+                    }
+                  >
+                    {product.shippingInPaise === 0
+                      ? "FREE"
+                      : formatINR(product.shippingInPaise)}
+                  </span>
                 </p>
                 <p className="flex justify-between gap-4 text-[13px] text-ink-faint">
                   <span>GST</span>
@@ -324,7 +354,7 @@ export default function HomePage() {
                   Total
                 </span>
                 <span className="font-display text-3xl font-bold tabular-nums">
-                  {formatINR(product.priceInPaise)}
+                  {formatINR(product.priceInPaise + product.shippingInPaise)}
                 </span>
               </p>
               <Link

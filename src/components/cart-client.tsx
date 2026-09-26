@@ -13,7 +13,7 @@ import {
   Truck,
   Undo2,
 } from "lucide-react";
-import { product, policies } from "@/lib/config";
+import { policies } from "@/lib/config";
 import { formatINR } from "@/lib/format";
 import { useCart } from "./cart-store";
 import { Badge, Card, Container, Section, buttonClasses } from "./ui";
@@ -28,8 +28,10 @@ function CartSkeleton() {
 }
 
 export function CartClient() {
-  const { qty, setQty, clear, subtotalInPaise, hydrated, maxPerOrder } =
+  const { qty, setQty, clear, subtotalInPaise, hydrated, maxPerOrder, product } =
     useCart();
+  const shippingInPaise = qty > 0 ? product.shippingInPaise : 0;
+  const totalInPaise = subtotalInPaise + shippingInPaise;
 
   return (
     <Section className="pt-10 md:pt-14">
@@ -71,7 +73,7 @@ export function CartClient() {
                   className="relative size-22 shrink-0 overflow-hidden rounded-xl border border-sandline sm:size-26"
                 >
                   <Image
-                    src={product.images[0].src}
+                    src={product.images[0]?.src ?? "/images/product-1.jpg"}
                     alt={product.name}
                     fill
                     sizes="104px"
@@ -153,13 +155,21 @@ export function CartClient() {
                 </div>
                 <div className="flex justify-between">
                   <dt className="font-semibold text-ink-soft">Shipping</dt>
-                  <dd className="font-bold text-leaf">FREE</dd>
+                  <dd
+                    className={
+                      shippingInPaise === 0
+                        ? "font-bold text-leaf"
+                        : "font-mono font-bold tabular-nums"
+                    }
+                  >
+                    {shippingInPaise === 0 ? "FREE" : formatINR(shippingInPaise)}
+                  </dd>
                 </div>
                 <div className="dashed-rule my-2" />
                 <div className="flex items-baseline justify-between">
                   <dt className="font-bold text-ink">Total</dt>
                   <dd className="font-mono text-xl font-bold tabular-nums text-ink">
-                    {formatINR(subtotalInPaise)}
+                    {formatINR(totalInPaise)}
                   </dd>
                 </div>
               </dl>

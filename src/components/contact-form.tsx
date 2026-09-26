@@ -65,49 +65,11 @@ export function ContactForm() {
         error?: string;
         message?: string;
         fieldErrors?: Errors;
-        web3formsFallbackKey?: string;
       };
       if (!res.ok || !data.ok) {
         if (data.fieldErrors) setErrors(data.fieldErrors);
         setFormError(data.error ?? "Something went wrong. Please try again.");
         return;
-      }
-
-      // If Web3Forms can only accept browser-side submissions (free plan), the
-      // validated API response hands us the key — complete delivery here.
-      // Fire-and-forget: the durable record is already stored server-side.
-      if (data.web3formsFallbackKey) {
-        const parsed = contactSchema.parse(values);
-        void fetch("https://api.web3forms.com/submit", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            access_key: data.web3formsFallbackKey,
-            from_name: "Beevo store contact form",
-            subject: `Beevo contact — ${parsed.topic}${
-              parsed.orderNumber ? ` (${parsed.orderNumber.toUpperCase()})` : ""
-            }`,
-            name: parsed.name,
-            email: parsed.email,
-            replyto: parsed.email,
-            message: [
-              `Topic: ${parsed.topic}`,
-              parsed.orderNumber
-                ? `Order ID: ${parsed.orderNumber.toUpperCase()}`
-                : null,
-              parsed.phone ? `Phone: +91 ${parsed.phone}` : null,
-              "",
-              parsed.message,
-            ]
-              .filter((line): line is string => line !== null)
-              .join("\n"),
-          }),
-        }).catch(() => {
-          // Silent — the server already has the message.
-        });
       }
 
       setDone(data.message ?? "Message received — we'll be in touch soon.");

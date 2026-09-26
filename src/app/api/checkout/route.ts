@@ -1,11 +1,12 @@
-import { eq } from "drizzle-orm";
-import { db } from "@/db";
-import { orders } from "@/db/schema";
-import { checkoutSchema } from "@/lib/validations";
-import { createOrder } from "@/lib/orders";
-import { sendOrderEmail } from "@/lib/email/send";
-import { createRazorpayOrder, isRazorpayConfigured } from "@/lib/payments/razorpay";
-import { product } from "@/lib/config";
+import { buildCheckoutSchema } from "@/lib/validations";
+import { createOrder, markPaymentInitiated } from "@/lib/orders";
+import { emailEventKey, sendOrderEmail } from "@/lib/email/send";
+import {
+  createRazorpayOrder,
+  isRazorpayConfigured,
+} from "@/lib/payments/razorpay";
+import { getCheckoutProduct, stockStateOf } from "@/lib/services/products";
+import { recordPaymentAttempt } from "@/lib/services/payments";
 import {
   getClientIp,
   isSameOrigin,
@@ -18,17 +19,25 @@ import { rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 
+/**
+ * Checkout.
+ *
+ * Nothing commercial is read from the request: price, shipping, currency,
+ * maximum quantity and stock all come from the authoritative (uncached)
+ * product row. The client only chooses quantity and payment method, and both
+ * are validated against the database.
+ *
+ * COD   : pending -> confirmed (stock reserved in the same transaction)
+ * Online: pending -> payment_pending (stock reserved only once payment is
+ *         verified, so abandoned checkouts never hold inventory)
+ */
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) {
     return jsonError(403, "Invalid request origin.");
   }
 
   const ip = getClientIp(request);
-  const limit = rateLimit({
-    key: `checkout:${ip}`,
-    limit: 8,
-    windowMs: 60_000,
-  });
+  const limit = rateLimit({ key: `checkout:${ip}`, limit: 8, windowMs: 60_000 });
   if (!limit.ok) {
     return jsonError(
       429,
@@ -39,7 +48,15 @@ export async function POST(request: Request) {
   const body = await readJson(request);
   if (body === null) return jsonError(400, "Malformed request body.");
 
-  const parsed = checkoutSchema.safeParse(body);
+  const product = await getCheckoutProduct();
+  if (!product) {
+    return jsonError(
+      503,
+      "The store is not accepting orders right now. Please try again shortly.",
+    );
+  }
+
+  const parsed = buildCheckoutSchema(product.maxPerOrder).safeParse(body);
   if (!parsed.success) {
     const fieldErrors: Record<string, string> = {};
     for (const issue of parsed.error.issues) {
@@ -50,6 +67,23 @@ export async function POST(request: Request) {
   }
 
   const input = parsed.data;
+
+  const stock = stockStateOf(product);
+  if (stock === "inactive") {
+    return jsonError(409, "This product is not available for purchase.");
+  }
+  if (stock === "out_of_stock") {
+    return jsonError(409, "Beevo Go is out of stock right now.");
+  }
+  if (input.quantity > product.inventoryQuantity) {
+    return jsonError(409, `Only ${product.inventoryQuantity} left in stock.`, {
+      fieldErrors: {
+        quantity: `Only ${product.inventoryQuantity} available`,
+      },
+    });
+  }
+
+  // Server-side money math, integer paise only.
   const total = product.priceInPaise * input.quantity + product.shippingInPaise;
 
   if (input.paymentMethod === "online" && !isRazorpayConfigured()) {
@@ -74,6 +108,7 @@ export async function POST(request: Request) {
       },
       quantity: input.quantity,
       paymentMethod: input.paymentMethod,
+      product,
     });
 
     logEvent("order_created", {
@@ -86,28 +121,40 @@ export async function POST(request: Request) {
     const successUrl = `/order/success?order=${order.orderNumber}&key=${order.lookupSecret}`;
 
     if (input.paymentMethod === "cod") {
-      // Only notify for genuinely new orders — deduped retries stay silent.
-      if (!deduplicated) await sendOrderEmail(order, "order_confirmed");
+      await sendOrderEmail(order, "order_confirmed", {
+        eventKey: emailEventKey(order.id, "order_confirmed", "confirmed"),
+      });
       return jsonOk({ mode: "cod", redirect: successUrl });
     }
 
-    // Online payment — create the Razorpay order and stash its id on ours.
+    // ---- Online payment ----
+    // Reuse the existing Razorpay order when the customer retries the same
+    // checkout: a retry is a new payment ATTEMPT, not a new order.
     try {
-      const rzpOrder = await createRazorpayOrder({
-        amountInPaise: total,
-        receipt: order.orderNumber,
-      });
-      await db
-        .update(orders)
-        .set({ razorpayOrderId: rzpOrder.id })
-        .where(eq(orders.id, order.id));
+      let razorpayOrderId = order.razorpayOrderId;
+      if (!razorpayOrderId) {
+        const rzpOrder = await createRazorpayOrder({
+          amountInPaise: order.totalInPaise,
+          receipt: order.orderNumber,
+          notes: { beevo_order: order.orderNumber },
+        });
+        razorpayOrderId = rzpOrder.id;
+        await markPaymentInitiated(order.id, rzpOrder.id);
+      }
 
+      await recordPaymentAttempt({
+        orderId: order.id,
+        providerOrderId: razorpayOrderId,
+        amountInPaise: order.totalInPaise,
+      });
+
+      // Only public Checkout values leave the server.
       return jsonOk({
         mode: "razorpay",
         orderNumber: order.orderNumber,
         razorpay: {
-          orderId: rzpOrder.id,
-          amount: total,
+          orderId: razorpayOrderId,
+          amount: order.totalInPaise,
           currency: "INR",
         },
       });
@@ -122,9 +169,11 @@ export async function POST(request: Request) {
       );
     }
   } catch (err) {
-    logEvent("checkout_error", {
-      error: err instanceof Error ? err.message : "unknown",
-    });
+    const message = err instanceof Error ? err.message : "unknown";
+    logEvent("checkout_error", { error: message });
+    if (err instanceof Error && err.name === "OutOfStockError") {
+      return jsonError(409, "That last unit just sold out. Please try again.");
+    }
     return jsonError(
       500,
       "Something went wrong on our side. Please try again in a moment.",

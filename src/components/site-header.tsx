@@ -36,7 +36,10 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
 
+  // Close the mobile menu whenever the route changes. The router is an
+  // external system; there is no render-time way to observe a navigation.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reacting to a navigation
     setOpen(false);
   }, [pathname]);
 

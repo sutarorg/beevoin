@@ -1,15 +1,21 @@
 {
-  "name": "nextjs-postgresql-template",
+  "name": "beevo",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx scripts/db-migrate.ts",
+    "db:seed": "tsx scripts/db-seed.ts",
+    "seed:dev": "tsx scripts/seed-dev.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.2",
     "@types/ws": "^8.18.1",
     "dotenv": "17.3.1",
     "drizzle-orm": "0.45.2",
@@ -18,6 +24,7 @@
     "pg": "8.20.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
+    "resend": "^6.30.0",
     "sharp": "^0.35.4",
     "ws": "^8.21.3",
     "zod": "^4.6.5"
@@ -33,6 +40,7 @@
     "eslint-config-next": "16.2.6",
     "postcss": "8.5.8",
     "tailwindcss": "4.1.17",
+    "tsx": "^4.23.15",
     "typescript": "5.9.3"
   }
 }
