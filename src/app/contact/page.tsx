@@ -1,7 +1,17 @@
 import type { Metadata } from "next";
 import { Mail, PackageSearch, Timer } from "lucide-react";
 import { ContactForm } from "@/components/contact-form";
+import { Breadcrumbs } from "@/components/breadcrumbs";
 import { Card, Container, Section } from "@/components/ui";
+import {
+  ORG_ID,
+  abs,
+  breadcrumbLd,
+  graph,
+  jsonLd,
+  webPageLd,
+  type Crumb,
+} from "@/lib/seo";
 import { policies, site } from "@/lib/config";
 import Link from "next/link";
 
@@ -12,10 +22,40 @@ export const metadata: Metadata = {
   alternates: { canonical: "/contact" },
 };
 
+const crumbs: Crumb[] = [
+  { name: "Home", path: "/" },
+  { name: "Contact", path: "/contact" },
+];
+
+const DESCRIPTION =
+  "Get help with your Beevo order — delivery, replacement support, product questions or anything else. A real person replies within one business day.";
+
+const ld = graph(
+  webPageLd({
+    path: "/contact",
+    name: "Contact Beevo",
+    description: DESCRIPTION,
+    crumbs,
+  }),
+  breadcrumbLd(crumbs, "/contact"),
+  {
+    "@type": "ContactPage",
+    "@id": `${abs("/contact")}#contactpage`,
+    url: abs("/contact"),
+    about: { "@id": ORG_ID },
+    isPartOf: { "@id": `${abs("/contact")}#webpage` },
+  },
+);
+
 export default function ContactPage() {
   return (
-    <Section className="pt-10 md:pt-14">
+    <Section className="pt-8 md:pt-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLd(ld) }}
+      />
       <Container className="max-w-5xl">
+        <Breadcrumbs crumbs={crumbs} />
         <div className="max-w-xl space-y-3">
           <h1 className="font-display text-3xl font-semibold tracking-tight text-ink md:text-4xl">
             Talk to a human

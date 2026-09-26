@@ -70,28 +70,28 @@ export const HOW_IT_WORKS = [
 export const USE_CASES = [
   {
     image: "/images/use-study.jpg",
-    alt: "Printed study notes beside the Beevo Go on a student's desk",
+    alt: "Beevo Go on a student's desk surrounded by printed revision checklists, formula notes and labels",
     tag: "Students & exam prep",
     title: "Tiny notes that actually stick around",
     body: "Print formulas, definitions, diagrams and mnemonics as pocket strips. Tape them into notebooks or pin them near your desk instead of re-copying by hand.",
   },
   {
     image: "/images/use-labels.jpg",
-    alt: "Kitchen jars labelled with strips printed on the Beevo Go",
+    alt: "Printed sticker labels and notes beside the Beevo Go, its thermal paper roll and charging cable",
     tag: "Home organisation",
     title: "A label for every jar, box and cable",
     body: "Kitchen staples, masala boxes, storage bins, chargers — print neat labels on demand and end the guessing game for good.",
   },
   {
     image: "/images/use-journal.jpg",
-    alt: "A journal decorated with black-and-white strips printed on the Beevo Go",
+    alt: "The Beevo Go printing a black-and-white photo from a phone, beside printed photo strips",
     tag: "Journaling & craft",
     title: "Analog-meets-digital creativity",
     body: "Print little monochrome photos, daily quotes, habit trackers and doodle stickers for your planner, scrapbook or pen-pal letters.",
   },
   {
     image: "/images/product-printing.jpg",
-    alt: "A printed list strip being pulled out of the Beevo Go",
+    alt: "A printed strip emerging from the Beevo Go, with printed notes and photos on the desk",
     tag: "Everyday errands",
     title: "Hand over a list, not your phone",
     body: "Print the kirana list, a medicine schedule for parents, or leaving-day reminders. Paper doesn't need your phone to be read.",

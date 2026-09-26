@@ -53,22 +53,29 @@ export function Eyebrow({
   );
 }
 
+/**
+ * Section heading. `as="h1"` exists because several standalone pages (FAQ,
+ * the legal pages) use this as their single page heading — a page whose only
+ * heading is an <h2> is a real on-page SEO defect, not a styling detail.
+ */
 export function SectionTitle({
   children,
   className,
+  as: Tag = "h2",
 }: {
   children: ReactNode;
   className?: string;
+  as?: "h1" | "h2";
 }) {
   return (
-    <h2
+    <Tag
       className={cn(
         "font-display text-[1.7rem] leading-[1.12] font-semibold tracking-tight text-ink md:text-4xl",
         className,
       )}
     >
       {children}
-    </h2>
+    </Tag>
   );
 }
 

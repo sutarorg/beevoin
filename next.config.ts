@@ -69,9 +69,55 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Trailing-slash URLs are a classic duplicate-content source; Next.js
+  // redirects /faq/ → /faq with this off, which keeps one canonical form.
+  trailingSlash: false,
+  images: {
+    // AVIF first, WebP second: both are far smaller than the source JPEG,
+    // which is what LCP on a product page is actually made of.
+    formats: ["image/avif", "image/webp"],
+    // Optimised variants are immutable, so let the CDN keep them for a year.
+    minimumCacheTTL: 31_536_000,
+    deviceSizes: [360, 414, 640, 750, 828, 1080, 1200, 1920],
+    imageSizes: [64, 96, 128, 256, 384],
+  },
+  experimental: {
+    // Only the icons actually imported are bundled, rather than the whole
+    // lucide barrel — smaller JS payload, better INP on mobile.
+    optimizePackageImports: ["lucide-react"],
+  },
   async headers() {
     return [
       { source: "/:path*", headers: securityHeaders },
+      {
+        // Static, fingerprinted product imagery — safe to cache hard.
+        source: "/images/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: "public, max-age=31536000, immutable",
+          },
+        ],
+      },
+      {
+        // Private or duplicate-by-nature routes. These are already disallowed
+        // in robots.txt and carry page-level noindex metadata; the header
+        // makes the signal unambiguous for every crawler, including ones that
+        // fetch a URL directly without reading robots.txt first.
+        source: "/:path(cart|checkout|track)",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, follow" }],
+      },
+      {
+        source: "/order/:path*",
+        headers: [
+          { key: "Cache-Control", value: "no-store, max-age=0" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+        ],
+      },
+      {
+        source: "/api/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
       {
         // The admin panel and every API route must never be cached by a CDN
         // or shared proxy.

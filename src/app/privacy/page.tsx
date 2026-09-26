@@ -12,6 +12,8 @@ export const metadata: Metadata = {
 export default function PrivacyPage() {
   return (
     <LegalPage
+      path="/privacy"
+      description={"How Beevo collects, uses, stores and protects your personal information, written to comply with the Digital Personal Data Protection Act, 2023."}
       title="Privacy Policy"
       updated="February 2026"
       intro={`This policy explains what personal information ${site.legalName} ("Beevo", "we", "us") collects when you use our website, why we collect it, and the choices you have. It is written to comply with applicable Indian law, including the Digital Personal Data Protection Act, 2023.`}

@@ -37,6 +37,15 @@ import {
   buttonClasses,
 } from "@/components/ui";
 import { site } from "@/lib/config";
+import { guidesByFreshness } from "@/lib/guides";
+import {
+  breadcrumbLd,
+  graph,
+  jsonLd,
+  productLd,
+  webPageLd,
+  type Crumb,
+} from "@/lib/seo";
 import { getStorefrontProduct } from "@/lib/services/products";
 import {
   UNAVAILABLE_PRODUCT,
@@ -63,51 +72,7 @@ const VALUE_ICONS: Record<string, LucideIcon> = {
   FlameKindling,
 };
 
-/**
- * Product structured data, built from the authoritative database row so the
- * price and availability Google sees always match the real store.
- */
-function buildProductLd(product: StorefrontProduct) {
-  const availability =
-    product.stockState === "in_stock" || product.stockState === "low_stock"
-      ? "https://schema.org/InStock"
-      : "https://schema.org/OutOfStock";
-
-  return {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.name,
-    sku: product.sku,
-    description:
-      "Palm-size Bluetooth mini thermal printer for ink-free black-and-white printing of notes, labels, lists and QR codes from Android and iOS smartphones. \u2248200 DPI, \u2248160 g, rechargeable \u22481200 mAh battery.",
-    url: site.url,
-    image:
-      product.images.length > 0
-        ? product.images.map((img) => `${site.url}${img.src}`)
-        : [`${site.url}/opengraph-image`],
-    brand: { "@type": "Brand", name: site.name },
-    material: "ABS plastic",
-    offers: {
-      "@type": "Offer",
-      url: site.url,
-      priceCurrency: product.currency,
-      // Schema.org prices are major units; our source of truth is paise.
-      price: (product.priceInPaise / 100).toFixed(2),
-      availability,
-      itemCondition: "https://schema.org/NewCondition",
-    },
-  };
-}
-
-const faqLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: FAQS.map((f) => ({
-    "@type": "Question",
-    name: f.q,
-    acceptedAnswer: { "@type": "Answer", text: f.a },
-  })),
-};
+const homeCrumbs: Crumb[] = [{ name: "Home", path: "/" }];
 
 /**
  * The SEO fields edited in /admin/product are published in the document head,
@@ -126,6 +91,16 @@ export async function generateMetadata(): Promise<Metadata> {
     title,
     description,
     alternates: { canonical: "/" },
+    keywords: [
+      "mini thermal printer",
+      "pocket printer",
+      "portable printer india",
+      "bluetooth thermal printer",
+      "inkless printer",
+      "label printer for phone",
+      "57mm thermal printer",
+      "beevo go",
+    ],
     openGraph: {
       title,
       description,
@@ -152,18 +127,26 @@ export default async function HomePage() {
   // Cached read of the single authoritative product row.
   const product = (await getStorefrontProduct()) ?? UNAVAILABLE_PRODUCT;
   // Do not advertise a fallback/unseeded product with a made-up zero price.
-  const productLd = product.id ? buildProductLd(product) : null;
+  // A product is only advertised to search engines when a real, priced row
+  // exists. The fallback product has no price, and inventing one would be a
+  // structured-data lie.
+  const ld = graph(
+    webPageLd({
+      path: "/",
+      name: "Beevo Go — ink-free pocket thermal printer",
+      description: site.description,
+      crumbs: homeCrumbs,
+    }),
+    breadcrumbLd(homeCrumbs, "/"),
+    product.id ? productLd(product) : null,
+  );
+  const guides = guidesByFreshness().slice(0, 3);
+
   return (
     <>
-      {productLd ? (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(productLd) }}
-        />
-      ) : null}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
+        dangerouslySetInnerHTML={{ __html: jsonLd(ld) }}
       />
 
       {/* ============ HERO ============ */}
@@ -563,6 +546,49 @@ export default async function HomePage() {
             </div>
           </div>
           <Accordion items={FAQS.slice(0, 6)} />
+        </Container>
+      </Section>
+
+      {/* ============ GUIDES ============ */}
+      <Section className="bg-cream/70">
+        <Container>
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div className="max-w-2xl space-y-3">
+              <Eyebrow>Before you buy, or after</Eyebrow>
+              <SectionTitle>Learn the little printer properly</SectionTitle>
+              <p className="text-[15px] leading-relaxed text-ink-soft">
+                Honest, practical guides to thermal printing — how it works,
+                which paper to buy, how to pair it, and what people actually
+                print six months in.
+              </p>
+            </div>
+            <Link
+              href="/guides"
+              className="text-sm font-bold text-accent-deep underline-offset-4 hover:underline"
+            >
+              All guides →
+            </Link>
+          </div>
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+            {guides.map((guide) => (
+              <Card key={guide.slug} className="flex flex-col p-6">
+                <h3 className="text-[16.5px] font-extrabold leading-snug text-ink">
+                  <Link
+                    href={`/guides/${guide.slug}`}
+                    className="hover:text-accent-deep"
+                  >
+                    {guide.title}
+                  </Link>
+                </h3>
+                <p className="mt-2 flex-1 text-[14px] leading-relaxed text-ink-soft">
+                  {guide.summary}
+                </p>
+                <p className="mt-3 text-[12px] font-bold text-ink-faint">
+                  {guide.readMinutes} min read
+                </p>
+              </Card>
+            ))}
+          </div>
         </Container>
       </Section>
 

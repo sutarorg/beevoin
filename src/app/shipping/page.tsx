@@ -12,6 +12,8 @@ export const metadata: Metadata = {
 export default function ShippingPage() {
   return (
     <LegalPage
+      path="/shipping"
+      description={"How Beevo ships your order across India: free shipping, dispatch in 24–48 hours, delivery in 3–7 business days, and tracking from dispatch to doorstep."}
       title="Shipping Policy"
       updated="February 2026"
       intro="Simple, honest shipping: free delivery across serviceable Indian pincodes, with tracking from dispatch to doorstep."

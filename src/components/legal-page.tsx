@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { Breadcrumbs } from "./breadcrumbs";
+import { breadcrumbLd, graph, jsonLd, webPageLd } from "@/lib/seo";
 import { Container, Eyebrow, Section, SectionTitle } from "./ui";
 
 export type LegalSection = {
@@ -12,18 +14,39 @@ export function LegalPage({
   updated,
   intro,
   sections,
+  path,
+  description,
 }: {
   eyebrow?: string;
   title: string;
   updated: string;
   intro: string;
   sections: LegalSection[];
+  /** Canonical path — drives the breadcrumb trail and its JSON-LD. */
+  path: string;
+  description: string;
 }) {
+  const crumbs = [
+    { name: "Home", path: "/" },
+    { name: title, path },
+  ];
+  const ld = graph(
+    webPageLd({ path, name: title, description, crumbs }),
+    breadcrumbLd(crumbs, path),
+  );
+
   return (
     <Section className="pt-10 md:pt-14">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: jsonLd(ld) }}
+      />
       <Container className="max-w-3xl">
+        <Breadcrumbs crumbs={crumbs} />
         <Eyebrow>{eyebrow}</Eyebrow>
-        <SectionTitle className="mt-3">{title}</SectionTitle>
+        <SectionTitle as="h1" className="mt-3">
+          {title}
+        </SectionTitle>
         <p className="mt-2 text-[13px] font-semibold text-ink-faint">
           Last updated: {updated}
         </p>

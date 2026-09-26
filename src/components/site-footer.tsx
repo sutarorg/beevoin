@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Mail, ShieldCheck, Truck, Undo2 } from "lucide-react";
 import { payments, policies, site } from "@/lib/config";
+import { guidesByFreshness } from "@/lib/guides";
 import { Container } from "./ui";
 
 const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
@@ -11,6 +12,18 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
       { href: "/cart", label: "Your cart" },
       { href: "/track", label: "Track your order" },
       { href: "/faq", label: "FAQ" },
+    ],
+  },
+  {
+    title: "Guides",
+    links: [
+      { href: "/guides", label: "All guides" },
+      ...guidesByFreshness()
+        .slice(0, 3)
+        .map((guide) => ({
+          href: `/guides/${guide.slug}`,
+          label: guide.metaTitle,
+        })),
     ],
   },
   {
@@ -33,7 +46,7 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-sandline bg-cream/60">
       <Container className="py-12 md:py-16">
-        <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1.2fr_1fr_1fr]">
           <div className="max-w-sm space-y-4">
             <p className="font-display text-2xl font-bold tracking-tight text-ink">
               beevo<span className="text-accent">.</span>

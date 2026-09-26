@@ -93,27 +93,27 @@ export const productDefaults = {
   images: [
     {
       src: "/images/product-1.jpg",
-      alt: "Beevo Go mini thermal printer — how it works: select a photo, connect via Bluetooth, load paper and print",
+      alt: "Beevo Go mini thermal printer printing a black-and-white photo from a phone, with printed photos and stickers on the desk",
     },
     {
       src: "/images/product-2.jpg",
-      alt: "Beevo Go pocket thermal printer, front view",
+      alt: "What's included with the Beevo Go: the printer, a 57 mm thermal paper roll, a USB charging cable, plus printed photos, notes and stickers",
     },
     {
       src: "/images/product-3.jpg",
-      alt: "Beevo Go mini printer printing a photo strip from a smartphone",
+      alt: "How the Beevo Go works in five steps: select a photo, connect over Bluetooth, load paper, print and collect your print",
     },
     {
       src: "/images/product-4.jpg",
-      alt: "Beevo Go portable printer shown with everyday printed moments",
+      alt: "Beevo Go on a study desk with printed revision checklists, formula notes, storage labels and journal stickers",
     },
     {
       src: "/images/product-5.jpg",
-      alt: "Beevo Go printer in use for labels, notes and journaling prints",
+      alt: "Beevo Go tucked into a handbag next to a phone and keys, shown at 11 × 8 cm — pocket-size and lightweight",
     },
     {
       src: "/images/product-6.jpg",
-      alt: "Beevo Go mini thermal printer with printed photos and paper roll",
+      alt: "Beevo Go printing wirelessly from a phone over Bluetooth — instant prints, no ink cartridge",
     },
   ],
   specifications: [

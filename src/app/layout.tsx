@@ -4,6 +4,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { CartProvider } from "@/components/cart-store";
 import { SiteShell } from "@/components/site-shell";
 import { site } from "@/lib/config";
+import { graph, jsonLd, organizationLd, websiteLd } from "@/lib/seo";
 import { getStorefrontProduct } from "@/lib/services/products";
 import { UNAVAILABLE_PRODUCT } from "@/lib/product-types";
 import "./globals.css";
@@ -72,31 +73,12 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-const organizationLd = {
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "@id": `${site.url}/#organization`,
-  name: site.name,
-  url: site.url,
-  logo: `${site.url}/icon.svg`,
-  description: site.description,
-  contactPoint: {
-    "@type": "ContactPoint",
-    email: site.supportEmail,
-    contactType: "customer support",
-    areaServed: "IN",
-    availableLanguage: ["English", "Hindi"],
-  },
-};
-
-const websiteLd = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  "@id": `${site.url}/#website`,
-  name: site.name,
-  url: site.url,
-  inLanguage: "en-IN",
-};
+/**
+ * Site-wide entity graph. Organization and WebSite are declared once, here,
+ * with stable @ids that every other page references instead of repeating —
+ * which is what lets Google resolve one Beevo entity rather than several.
+ */
+const siteGraph = graph(organizationLd, websiteLd);
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
   // Cached single-product read (tag: "product"). Storefront visitors never
@@ -104,18 +86,14 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   const product = (await getStorefrontProduct()) ?? UNAVAILABLE_PRODUCT;
 
   return (
-    <html lang="en">
+    <html lang="en-IN">
       <body>
         <a href="#main" className="skip-link">
           Skip to content
         </a>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationLd) }}
-        />
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteLd) }}
+          dangerouslySetInnerHTML={{ __html: jsonLd(siteGraph) }}
         />
         <CartProvider product={product}>
           <SiteShell>{children}</SiteShell>
