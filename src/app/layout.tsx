@@ -7,6 +7,13 @@ import { site } from "@/lib/config";
 import { graph, jsonLd, organizationLd, websiteLd } from "@/lib/seo";
 import { getStorefrontProduct } from "@/lib/services/products";
 import { UNAVAILABLE_PRODUCT } from "@/lib/product-types";
+import "@fontsource/poppins/300.css";
+import "@fontsource/poppins/400.css";
+import "@fontsource/poppins/500.css";
+import "@fontsource/poppins/600.css";
+import "@fontsource/poppins/700.css";
+import "@fontsource/poppins/800.css";
+import "@fontsource/poppins/900.css";
 import "./globals.css";
 
 const googleSiteVerification = process.env.GOOGLE_SITE_VERIFICATION?.trim();

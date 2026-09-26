@@ -42,7 +42,7 @@ export function ProductGallery({ images }: { images: readonly GalleryImage[] }) 
   return (
     <div className="min-w-0 space-y-3">
       <div
-        className="group relative aspect-square overflow-hidden rounded-3xl border border-sandline bg-white"
+        className="group relative aspect-square overflow-hidden rounded-[2rem] border border-sandline/80 bg-white shadow-pop"
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
@@ -83,6 +83,10 @@ export function ProductGallery({ images }: { images: readonly GalleryImage[] }) 
             <ChevronRight className="size-5" aria-hidden />
           </button>
         </div>
+        <div className="absolute bottom-3 left-3 hidden items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-xs font-extrabold text-ink shadow-lift backdrop-blur sm:flex">
+          <span className="size-2 rounded-full bg-accent" aria-hidden />
+          {index + 1} / {images.length}
+        </div>
         {/* position dots for mobile */}
         <div className="absolute inset-x-0 bottom-3 flex justify-center gap-1.5 sm:hidden" aria-hidden>
           {images.map((_, i) => (
@@ -112,9 +116,9 @@ export function ProductGallery({ images }: { images: readonly GalleryImage[] }) 
             aria-label={`Image ${i + 1}: ${img.alt}`}
             onClick={() => setIndex(i)}
             className={cn(
-              "relative size-16 shrink-0 overflow-hidden rounded-xl border-2 transition sm:size-[4.5rem]",
+              "relative size-16 shrink-0 overflow-hidden rounded-2xl border-2 bg-white shadow-[0_1px_0_rgb(255_255_255/0.8)] transition sm:size-[4.5rem]",
               i === index
-                ? "border-accent"
+                ? "border-accent shadow-lift"
                 : "border-sandline hover:border-ink-faint",
             )}
           >

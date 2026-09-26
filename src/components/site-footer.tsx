@@ -44,7 +44,7 @@ const COLUMNS: { title: string; links: { href: string; label: string }[] }[] = [
 
 export function SiteFooter() {
   return (
-    <footer id="site-footer" className="border-t border-sandline bg-cream/60">
+    <footer id="site-footer" className="border-t border-sandline bg-cream/75">
       <Container className="py-12 md:py-16">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-[1.3fr_1fr_1.2fr_1fr_1fr]">
           <div className="max-w-sm space-y-4">
@@ -86,7 +86,7 @@ export function SiteFooter() {
           ))}
         </div>
 
-        <div className="mt-10 grid gap-3 rounded-2xl border border-sandline bg-card p-5 text-[13px] font-semibold text-ink-soft sm:grid-cols-3">
+        <div className="mt-10 grid gap-3 rounded-3xl border border-sandline/80 bg-card p-5 text-[13px] font-semibold text-ink-soft shadow-lift sm:grid-cols-3">
           <p className="flex items-center gap-2">
             <Truck className="size-4 text-leaf" aria-hidden />
             Free shipping · {policies.deliveryEstimate}

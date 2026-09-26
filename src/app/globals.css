@@ -2,41 +2,52 @@
 
 @theme {
   /* Beevo design tokens — "paper, ink & vermillion" */
-  --color-paper: #faf7f0;
-  --color-cream: #f2ebdf;
-  --color-sandline: #e3dac9;
+  --color-paper: #fffaf1;
+  --color-cream: #f6efe1;
+  --color-sandline: #e6d8c4;
   --color-card: #ffffff;
-  --color-ink: #1d1912;
-  --color-ink-soft: #57503f;
-  --color-ink-faint: #8a8172;
+  --color-ink: #17130d;
+  --color-ink-soft: #514737;
+  --color-ink-faint: #887a66;
   --color-accent: #e4520e;
-  --color-accent-deep: #c24208;
-  --color-accent-soft: #fceee3;
-  --color-leaf: #1b7f4d;
-  --color-leaf-soft: #e5f2ea;
-  --color-chili: #c63b2f;
-  --color-chili-soft: #fbe9e7;
+  --color-accent-deep: #b93b05;
+  --color-accent-soft: #fff0e4;
+  --color-leaf: #147747;
+  --color-leaf-soft: #e4f4ea;
+  --color-chili: #be3429;
+  --color-chili-soft: #fde9e6;
   --color-haldi: #8a5c00;
-  --color-haldi-soft: #fdf3dc;
+  --color-haldi-soft: #fff3d5;
   /* Review stars — a turmeric gold that sits between accent and haldi. */
   --color-star: #e9a020;
 
-  /* System font stacks keep builds self-contained and avoid a render-blocking
-     third-party font request on first visits. */
-  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-display: Georgia, Cambria, "Times New Roman", serif;
+  /* Poppins is imported from @fontsource in the root layout so the font is
+     self-hosted and used consistently for body copy and headings. */
+  --font-sans: "Poppins", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "Poppins", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 
-  --shadow-lift: 0 1px 2px rgb(29 25 18 / 0.05), 0 8px 24px -12px rgb(29 25 18 / 0.18);
-  --shadow-pop: 0 2px 6px rgb(29 25 18 / 0.06), 0 20px 44px -16px rgb(29 25 18 / 0.28);
+  --shadow-lift: 0 1px 2px rgb(23 19 13 / 0.05), 0 10px 28px -16px rgb(23 19 13 / 0.2);
+  --shadow-pop: 0 6px 18px -12px rgb(23 19 13 / 0.24), 0 26px 56px -24px rgb(23 19 13 / 0.32);
+  --shadow-glow: 0 18px 60px -28px rgb(228 82 14 / 0.55);
 }
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 7.5rem;
+}
+
+section[id] {
+  scroll-margin-top: 7.5rem;
 }
 
 body {
   @apply bg-paper text-ink font-sans antialiased;
+  background:
+    radial-gradient(circle at top left, rgb(255 240 228 / 0.9), transparent 34rem),
+    radial-gradient(circle at 85% 8rem, rgb(228 82 14 / 0.08), transparent 28rem),
+    linear-gradient(180deg, #fffaf1 0%, #faf7f0 44%, #fffaf1 100%);
   text-rendering: optimizeLegibility;
+  font-feature-settings: "ss01" 1, "kern" 1;
   /* Guard against any element pushing past the viewport on small screens.
      `clip` (unlike `hidden`) does not create a scroll container, so
      position: sticky keeps working in the header and sticky buy bar. */
@@ -59,8 +70,13 @@ body {
 
 :focus-visible {
   outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-  border-radius: 6px;
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Screen-reader only utility (skip links, a11y helpers) */
@@ -123,6 +139,10 @@ body {
   display: flex;
   width: max-content;
   animation: marquee 32s linear infinite;
+}
+.marquee:hover .marquee-track,
+.marquee:focus-within .marquee-track {
+  animation-play-state: paused;
 }
 @keyframes marquee {
   to {

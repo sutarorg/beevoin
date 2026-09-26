@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Smartphone,
   Tag,
+  Truck,
   Undo2,
   Weight,
   Zap,
@@ -160,29 +161,70 @@ export default async function HomePage() {
       <section className="relative overflow-hidden">
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-40 -top-40 size-[480px] rounded-full bg-accent-soft blur-3xl"
+          className="pointer-events-none absolute -right-40 -top-40 size-[520px] rounded-full bg-accent-soft blur-3xl"
         />
-        <Container className="relative grid items-center gap-10 pb-12 pt-8 md:pt-14 lg:grid-cols-[1.05fr_1fr] lg:gap-14">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -left-32 top-36 size-[360px] rounded-full bg-white/70 blur-3xl"
+        />
+        <Container className="relative grid items-center gap-10 pb-12 pt-9 md:pb-16 md:pt-16 lg:grid-cols-[1.04fr_0.96fr] lg:gap-16">
           <div className="order-2 min-w-0 space-y-6 lg:order-1">
+            <div className="flex flex-wrap items-center gap-2.5">
+              <a
+                href="#reviews"
+                className="inline-flex items-center gap-2 rounded-full border border-sandline/80 bg-white/80 px-3.5 py-2 text-xs font-extrabold text-ink shadow-lift backdrop-blur transition hover:-translate-y-0.5 hover:shadow-pop"
+              >
+                <StarRating rating={SOCIAL_PROOF.rating} starClassName="size-3.5" />
+                {SOCIAL_PROOF.rating.toFixed(1)} from {SOCIAL_PROOF.reviewCount} reviews
+              </a>
+              <span className="inline-flex items-center gap-2 rounded-full border border-leaf/10 bg-leaf-soft px-3.5 py-2 text-xs font-extrabold text-leaf">
+                <ShieldCheck className="size-3.5" aria-hidden />
+                7-day replacement
+              </span>
+            </div>
             <Eyebrow>{HERO.eyebrow}</Eyebrow>
-            <h1 className="font-display text-[2.35rem] leading-[1.06] font-semibold tracking-tight text-ink sm:text-5xl lg:text-[3.4rem]">
+            <h1 className="max-w-2xl font-display text-[2.55rem] font-extrabold leading-[1.04] tracking-[-0.055em] text-ink sm:text-5xl lg:text-[3.75rem]">
               Your notes, labels and memories,{" "}
               <span className="text-accent">in your hand in seconds.</span>
             </h1>
-            <p className="max-w-lg text-[15.5px] leading-relaxed text-ink-soft md:text-lg">
+            <p className="max-w-xl text-base leading-relaxed text-ink-soft md:text-lg">
               {HERO.subtitle}
             </p>
+            <div className="grid max-w-xl gap-2.5 sm:grid-cols-3">
+              {[
+                { icon: Smartphone, label: "iPhone & Android" },
+                { icon: BadgeCheck, label: "No ink refills" },
+                { icon: Truck, label: "Free India shipping" },
+              ].map((item) => (
+                <div
+                  key={item.label}
+                  className="flex items-center gap-2 rounded-2xl border border-sandline/70 bg-white/70 px-3 py-2.5 text-[13px] font-extrabold text-ink shadow-lift backdrop-blur"
+                >
+                  <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent-deep">
+                    <item.icon className="size-3.5" aria-hidden />
+                  </span>
+                  {item.label}
+                </div>
+              ))}
+            </div>
             <BuyBox />
           </div>
           <div className="order-1 min-w-0 lg:order-2">
-            <div className="relative">
+            <div className="relative rounded-[2.25rem] border border-white/70 bg-white/45 p-2 shadow-pop backdrop-blur">
               <ProductGallery images={product.images} />
               <Badge
                 tone="dark"
-                className="absolute -top-2.5 left-4 rotate-[-4deg] px-4 py-1.5 text-sm shadow-pop"
+                className="absolute -top-2.5 left-5 rotate-[-4deg] px-4 py-1.5 text-sm shadow-pop"
               >
                 <Printer className="size-3.5" aria-hidden />
                 Pocket-size
+              </Badge>
+              <Badge
+                tone="accent"
+                className="absolute -bottom-2.5 right-5 px-4 py-1.5 text-sm shadow-pop"
+              >
+                <Zap className="size-3.5" aria-hidden />
+                Tap to print
               </Badge>
             </div>
           </div>
@@ -190,7 +232,7 @@ export default async function HomePage() {
 
         {/* Spec ticker — kept larger and darker: spec-savvy buyers scan this
             strip, so it must not read as fine print. */}
-        <div className="marquee border-y border-dashed border-sandline bg-white/70 py-4">
+        <div className="marquee border-y border-dashed border-sandline bg-white/80 py-4 shadow-[inset_0_1px_0_rgb(255_255_255/0.8)] backdrop-blur">
           <div className="marquee-track gap-0">
             {[0, 1].map((dup) => (
               <div
@@ -273,7 +315,7 @@ export default async function HomePage() {
             {VALUE_PROPS.map((prop) => {
               const Icon = VALUE_ICONS[prop.icon];
               return (
-                <Card key={prop.title} className="p-6 transition-shadow hover:shadow-pop">
+                <Card key={prop.title} className="p-6 hover:-translate-y-1 hover:shadow-pop">
                   <span className="mb-4 inline-flex rounded-2xl bg-accent-soft p-3 text-accent-deep">
                     <Icon className="size-5.5" aria-hidden />
                   </span>
@@ -299,9 +341,12 @@ export default async function HomePage() {
           </div>
           <ol className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
             {HOW_IT_WORKS.map((step) => (
-              <li key={step.step} className="relative">
+              <li
+                key={step.step}
+                className="relative rounded-3xl border border-sandline/80 bg-white/75 p-5 shadow-lift backdrop-blur transition-all duration-200 hover:-translate-y-1 hover:shadow-pop"
+              >
                 <div className="flex items-center gap-3">
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-ink font-display text-lg font-bold text-paper">
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-ink font-display text-lg font-extrabold text-paper shadow-lift">
                     {step.step}
                   </span>
                   <span
@@ -351,7 +396,7 @@ export default async function HomePage() {
                     i % 2 === 1 ? "relative md:order-2" : "relative"
                   }
                 >
-                  <div className="relative aspect-square overflow-hidden rounded-3xl border border-sandline shadow-lift">
+                  <div className="relative aspect-square overflow-hidden rounded-[2rem] border border-sandline/80 shadow-pop">
                     <Image
                       src={use.image}
                       alt={use.alt}
@@ -362,7 +407,13 @@ export default async function HomePage() {
                     />
                   </div>
                 </div>
-                <div className={i % 2 === 1 ? "md:order-1" : ""}>
+                <div
+                  className={
+                    i % 2 === 1
+                      ? "rounded-3xl border border-sandline/70 bg-white/65 p-5 shadow-lift backdrop-blur md:order-1 md:p-6"
+                      : "rounded-3xl border border-sandline/70 bg-white/65 p-5 shadow-lift backdrop-blur md:p-6"
+                  }
+                >
                   <Badge tone="accent">{use.tag}</Badge>
                   <h3 className="mt-3.5 font-display text-[1.55rem] font-semibold leading-snug tracking-tight text-ink md:text-3xl">
                     {use.title}
@@ -401,7 +452,7 @@ export default async function HomePage() {
           </div>
           <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {REVIEWS.map((review) => (
-              <Card key={review.name} className="flex flex-col p-6">
+              <Card key={review.name} className="flex flex-col p-6 hover:-translate-y-1 hover:shadow-pop">
                 <div className="flex items-center justify-between gap-3">
                   <StarRating rating={review.rating} />
                   <span className="inline-flex items-center gap-1 rounded-full bg-leaf-soft px-2.5 py-1 text-[11px] font-bold text-leaf">
@@ -428,8 +479,12 @@ export default async function HomePage() {
       </Section>
 
       {/* ============ PRICE / RECEIPT ============ */}
-      <Section id="pricing" className="bg-ink py-16 text-paper md:py-24">
-        <Container className="grid items-center gap-12 lg:grid-cols-2">
+      <Section id="pricing" className="relative overflow-hidden bg-ink py-16 text-paper md:py-24">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute right-[-12rem] top-[-10rem] size-[28rem] rounded-full bg-accent/25 blur-3xl"
+        />
+        <Container className="relative grid items-center gap-12 lg:grid-cols-2">
           <div className="space-y-5">
             <Eyebrow className="text-paper/60 [&>span]:bg-accent">
               Choose how you pay.
@@ -457,7 +512,7 @@ export default async function HomePage() {
           </div>
 
           <div className="mx-auto w-full max-w-md">
-            <div className="fade-up rounded-t-2xl bg-white px-7 pb-8 pt-7 font-mono text-ink shadow-pop">
+            <div className="fade-up rounded-t-[2rem] bg-white px-7 pb-8 pt-7 font-mono text-ink shadow-pop">
               <p className="text-center text-xs font-bold uppercase tracking-[0.22em] text-ink-faint">
                 Beevo · Order preview
               </p>
@@ -544,7 +599,7 @@ export default async function HomePage() {
               Every number below comes from the manufacturer&apos;s published
               specifications. Figures marked ≈ are approximate.
             </p>
-            <dl className="mt-7 overflow-hidden rounded-2xl border border-sandline bg-card">
+            <dl className="mt-7 overflow-hidden rounded-3xl border border-sandline/80 bg-card shadow-lift">
               {SPECS.map((spec) => (
                 <div
                   key={spec.label}
@@ -564,7 +619,7 @@ export default async function HomePage() {
           <div id="box">
             <Eyebrow>What&apos;s in the box</Eyebrow>
             <SectionTitle className="mt-3">Open it up</SectionTitle>
-            <div className="relative mt-7 aspect-square overflow-hidden rounded-3xl border border-sandline shadow-lift">
+            <div className="relative mt-7 aspect-square overflow-hidden rounded-[2rem] border border-sandline/80 shadow-pop">
               <Image
                 src="/images/box-contents.jpg"
                 alt="Beevo Go box contents: the printer, USB charging cable, a thermal paper roll and the quick-start guide"
@@ -626,7 +681,7 @@ export default async function HomePage() {
                 body: `Write to ${site.supportEmail} — a person replies within one business day, not a bot loop.`,
               },
             ].map((item) => (
-              <Card key={item.title} className="p-6">
+              <Card key={item.title} className="p-6 hover:-translate-y-1 hover:shadow-pop">
                 <item.icon className="size-6 text-accent-deep" aria-hidden />
                 <h3 className="mt-3.5 text-[16px] font-extrabold text-ink">
                   {item.title}
@@ -696,7 +751,7 @@ export default async function HomePage() {
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {guides.map((guide) => (
-              <Card key={guide.slug} className="flex flex-col p-6">
+              <Card key={guide.slug} className="flex flex-col p-6 hover:-translate-y-1 hover:shadow-pop">
                 <h3 className="text-[16.5px] font-extrabold leading-snug text-ink">
                   <Link
                     href={`/guides/${guide.slug}`}
