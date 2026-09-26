@@ -15,7 +15,6 @@ export default function CheckoutPage() {
     <CheckoutForm
       razorpayEnabled={payments.razorpayEnabled}
       razorpayKeyId={payments.razorpayKeyId}
-      codOtpEnabled={payments.cod}
     />
   );
 }

@@ -17,8 +17,10 @@
  * `npm run db:seed` can create the first row.
  */
 
+// A production canonical URL is essential for search indexing. Set
+// NEXT_PUBLIC_SITE_URL to the final custom-domain origin in every deployment.
 const siteUrl = (
-  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://beevo.in"
 ).replace(/\/$/, "");
 
 export const site = {
@@ -42,13 +44,6 @@ export const policies = {
 } as const;
 
 export const payments = {
-  /** COD becomes available only after its required SMS verification is configured. */
-  cod: Boolean(
-    process.env.TWILIO_ACCOUNT_SID &&
-      process.env.TWILIO_AUTH_TOKEN &&
-      process.env.TWILIO_VERIFY_SERVICE_SID &&
-      (process.env.COD_OTP_TOKEN_SECRET?.length ?? 0) >= 32,
-  ),
   /** Online payments via Razorpay — enabled only when API keys are configured. */
   razorpayEnabled: Boolean(
     process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET,

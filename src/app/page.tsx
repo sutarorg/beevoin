@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -79,7 +80,11 @@ function buildProductLd(product: StorefrontProduct) {
     sku: product.sku,
     description:
       "Palm-size Bluetooth mini thermal printer for ink-free black-and-white printing of notes, labels, lists and QR codes from Android and iOS smartphones. \u2248200 DPI, \u2248160 g, rechargeable \u22481200 mAh battery.",
-    image: product.images.map((img) => `${site.url}${img.src}`),
+    url: site.url,
+    image:
+      product.images.length > 0
+        ? product.images.map((img) => `${site.url}${img.src}`)
+        : [`${site.url}/opengraph-image`],
     brand: { "@type": "Brand", name: site.name },
     material: "ABS plastic",
     offers: {
@@ -104,16 +109,58 @@ const faqLd = {
   })),
 };
 
+/**
+ * The SEO fields edited in /admin/product are published in the document head,
+ * as well as in the body. This keeps the Google result in sync with the actual
+ * product instead of leaving a hidden, stale copy of the marketing copy.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const product = await getStorefrontProduct();
+  const title =
+    product?.metaTitle?.trim() ||
+    "Beevo Go — Ink-Free Pocket Thermal Printer";
+  const description =
+    product?.metaDescription?.trim() || site.description;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: "/" },
+    openGraph: {
+      title,
+      description,
+      url: "/",
+      images: [
+        {
+          url: "/opengraph-image",
+          width: 1200,
+          height: 630,
+          alt: "Beevo Go ink-free pocket thermal printer",
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: ["/opengraph-image"],
+    },
+  };
+}
+
 export default async function HomePage() {
   // Cached read of the single authoritative product row.
   const product = (await getStorefrontProduct()) ?? UNAVAILABLE_PRODUCT;
-  const productLd = buildProductLd(product);
+  // Do not advertise a fallback/unseeded product with a made-up zero price.
+  const productLd = product.id ? buildProductLd(product) : null;
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productLd) }}
-      />
+      {productLd ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(productLd) }}
+        />
+      ) : null}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
@@ -329,7 +376,7 @@ export default async function HomePage() {
                   </span>
                 </p>
                 <p className="flex justify-between gap-4">
-                  <span>Cash on Delivery × 1<span className="block text-xs text-ink-faint">Mobile OTP verification required</span></span>
+                  <span>Cash on Delivery × 1<span className="block text-xs text-ink-faint">Pay at your doorstep</span></span>
                   <span className="font-bold tabular-nums">
                     {formatINR(product.codPriceInPaise)}
                   </span>

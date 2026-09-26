@@ -82,8 +82,6 @@ const checkoutBase = {
   }),
   pincode: z.string().trim().regex(pincodeRegex, messages.pincode),
   paymentMethod: z.enum(["cod", "online"]),
-  /** Signed one-time token issued only after the server verifies the SMS OTP. */
-  codOtpToken: z.string().trim().max(1000).optional(),
 };
 
 /**
@@ -103,14 +101,6 @@ export function buildCheckoutSchema(maxPerOrder: number) {
 
 export type CheckoutInput = z.infer<ReturnType<typeof buildCheckoutSchema>>;
 
-export const codOtpSendSchema = z.object({
-  phone: z.string().trim().regex(phoneRegex, messages.phone),
-});
-
-export const codOtpVerifySchema = z.object({
-  phone: z.string().trim().regex(phoneRegex, messages.phone),
-  code: z.string().trim().regex(/^\d{4,10}$/, "Enter the OTP sent to your mobile number"),
-});
 
 export const trackSchema = z
   .object({

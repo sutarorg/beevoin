@@ -71,9 +71,10 @@ export default async function TermsPage() {
           heading: "Payments",
           body: (
             <P>
-              We accept Cash on Delivery (cash or UPI at your doorstep) after
-              mobile OTP verification, {"and online payments (UPI, cards, netbanking and wallets) processed by Razorpay when enabled on the store"}.
-              Payment verification for online payments happens on our servers;
+              We accept Cash on Delivery (cash or UPI at your doorstep) and
+              online payments (UPI, cards, netbanking and wallets) processed by
+              Razorpay when enabled on the store. Payment verification for
+              online payments happens on our servers;
               an order is confirmed only after successful verification. Failed or unverified payments are not collected,
               and any amount deducted by your bank in such cases is
               automatically reversed by the payment network per its own

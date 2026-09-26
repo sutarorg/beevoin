@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
 import { requirePermission } from "@/lib/auth/admin";
-import { roleHasPermission } from "@/lib/auth/permissions";
 import { getDashboardMetrics } from "@/lib/admin/queries";
 import { formatDateTime, formatINR } from "@/lib/format";
 import {
@@ -107,7 +106,7 @@ export default async function AdminDashboardPage() {
         </ul>
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           label="Net revenue · 30 days"
           value={formatINR(metrics.revenue30.net)}
@@ -123,12 +122,6 @@ export default async function AdminDashboardPage() {
           value={String(metrics.totalOrders)}
           hint="All time, every status"
           href="/admin/orders"
-        />
-        <StatCard
-          label="Refunded"
-          value={formatINR(metrics.refunds.totalInPaise)}
-          hint={`${metrics.refunds.count} refund(s)`}
-          href={roleHasPermission(actor.role, "refunds.view") ? "/admin/refunds" : undefined}
         />
       </div>
 

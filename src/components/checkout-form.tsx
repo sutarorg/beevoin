@@ -7,7 +7,6 @@ import { useMemo, useState } from "react";
 import {
   AlertCircle,
   ArrowLeft,
-  CheckCircle2,
   CreditCard,
   HandCoins,
   Loader2,
@@ -17,7 +16,7 @@ import {
   ShoppingBag,
 } from "lucide-react";
 import { site } from "@/lib/config";
-import { INDIAN_STATES, buildCheckoutSchema, phoneRegex } from "@/lib/validations";
+import { INDIAN_STATES, buildCheckoutSchema } from "@/lib/validations";
 import { formatINR } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import { useCart } from "./cart-store";
@@ -40,8 +39,6 @@ declare global {
 }
 
 type FieldErrors = Record<string, string | undefined>;
-type CodVerification = { phone: string; token: string };
-
 type FormValues = {
   name: string;
   email: string;
@@ -80,11 +77,9 @@ function loadRazorpayScript(): Promise<void> {
 export function CheckoutForm({
   razorpayEnabled,
   razorpayKeyId,
-  codOtpEnabled,
 }: {
   razorpayEnabled: boolean;
   razorpayKeyId: string;
-  codOtpEnabled: boolean;
 }) {
   const router = useRouter();
   const { qty, setQty, hydrated, maxPerOrder, clear, product } = useCart();
@@ -96,10 +91,6 @@ export function CheckoutForm({
   );
   const [submitting, setSubmitting] = useState(false);
   const [statusNote, setStatusNote] = useState<string | null>(null);
-  const [otpCode, setOtpCode] = useState("");
-  const [otpBusy, setOtpBusy] = useState<"send" | "verify" | null>(null);
-  const [otpStatus, setOtpStatus] = useState<string | null>(null);
-  const [codVerification, setCodVerification] = useState<CodVerification | null>(null);
 
   // The selection controls the displayed price, but the server independently
   // selects this exact database price before creating or charging an order.
@@ -109,9 +100,6 @@ export function CheckoutForm({
   const shippingInPaise = product.shippingInPaise;
   const totalInPaise = subtotalInPaise + shippingInPaise;
   const onlineSavingInPaise = product.codPriceInPaise - product.priceInPaise;
-  const codVerified =
-    codVerification?.phone === values.phone.trim() && Boolean(codVerification.token);
-
   const set =
     (key: keyof FormValues) =>
     (
@@ -120,11 +108,6 @@ export function CheckoutForm({
       const v = e.target.value;
       setValues((prev) => ({ ...prev, [key]: v }));
       setErrors((prev) => ({ ...prev, [key]: undefined }));
-      if (key === "phone") {
-        setCodVerification(null);
-        setOtpCode("");
-        setOtpStatus(null);
-      }
     };
 
   const buttonLabel = useMemo(() => {
@@ -132,75 +115,6 @@ export function CheckoutForm({
       return `Place order — ${formatINR(totalInPaise)} · Pay on delivery`;
     return `Pay ${formatINR(totalInPaise)} securely`;
   }, [paymentMethod, totalInPaise]);
-
-  async function sendOtp() {
-    setFormError(null);
-    setOtpStatus(null);
-    if (!phoneRegex.test(values.phone.trim())) {
-      setErrors((prev) => ({
-        ...prev,
-        phone: "Enter a valid 10-digit Indian mobile number before requesting an OTP",
-      }));
-      return;
-    }
-
-    setOtpBusy("send");
-    try {
-      const res = await fetch("/api/cod-otp/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: values.phone.trim() }),
-      });
-      const data = (await res.json()) as { ok: boolean; error?: string };
-      if (!res.ok || !data.ok) {
-        setOtpStatus(data.error ?? "We couldn't send the OTP. Please try again.");
-        return;
-      }
-      setCodVerification(null);
-      setOtpStatus("OTP sent. It may take a moment to arrive.");
-    } catch {
-      setOtpStatus("Network error while sending the OTP. Please try again.");
-    } finally {
-      setOtpBusy(null);
-    }
-  }
-
-  async function verifyOtp() {
-    setFormError(null);
-    setOtpStatus(null);
-    if (!phoneRegex.test(values.phone.trim())) {
-      setErrors((prev) => ({ ...prev, phone: "Enter a valid 10-digit Indian mobile number" }));
-      return;
-    }
-    if (!/^\d{4,10}$/.test(otpCode.trim())) {
-      setOtpStatus("Enter the OTP sent to your mobile number.");
-      return;
-    }
-
-    setOtpBusy("verify");
-    try {
-      const res = await fetch("/api/cod-otp/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: values.phone.trim(), code: otpCode.trim() }),
-      });
-      const data = (await res.json()) as {
-        ok: boolean;
-        error?: string;
-        verificationToken?: string;
-      };
-      if (!res.ok || !data.ok || !data.verificationToken) {
-        setOtpStatus(data.error ?? "We couldn't verify that OTP. Please try again.");
-        return;
-      }
-      setCodVerification({ phone: values.phone.trim(), token: data.verificationToken });
-      setOtpStatus("Mobile number verified for this COD order.");
-    } catch {
-      setOtpStatus("Network error while verifying the OTP. Please try again.");
-    } finally {
-      setOtpBusy(null);
-    }
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -221,16 +135,6 @@ export function CheckoutForm({
       setFormError("Please fix the highlighted fields and try again.");
       return;
     }
-    if (paymentMethod === "cod" && !codOtpEnabled) {
-      setFormError("Cash on Delivery verification is temporarily unavailable. Please pay online or contact support.");
-      return;
-    }
-    if (paymentMethod === "cod" && !codVerified) {
-      setErrors((prev) => ({ ...prev, phone: "Verify this mobile number with OTP for COD" }));
-      setFormError("Please verify your mobile number before placing a COD order.");
-      return;
-    }
-
     setSubmitting(true);
     setStatusNote(
       paymentMethod === "cod" ? "Placing your order…" : "Preparing secure payment…",
@@ -244,7 +148,6 @@ export function CheckoutForm({
           ...values,
           quantity: qty,
           paymentMethod,
-          codOtpToken: paymentMethod === "cod" ? codVerification?.token : undefined,
         }),
       });
       const data = (await res.json()) as {
@@ -572,8 +475,7 @@ export function CheckoutForm({
 
                   <label
                     className={cn(
-                      "flex items-start gap-3.5 rounded-2xl border-[1.5px] p-4.5 transition",
-                      codOtpEnabled ? "cursor-pointer" : "cursor-not-allowed opacity-60",
+                      "flex cursor-pointer items-start gap-3.5 rounded-2xl border-[1.5px] p-4.5 transition",
                       paymentMethod === "cod"
                         ? "border-accent bg-accent-soft/60"
                         : "border-sandline bg-white hover:border-ink-faint/50",
@@ -585,7 +487,6 @@ export function CheckoutForm({
                       value="cod"
                       checked={paymentMethod === "cod"}
                       onChange={() => setPaymentMethod("cod")}
-                      disabled={!codOtpEnabled}
                       className="mt-1 size-4.5 accent-[#E4520E]"
                     />
                     <span className="flex-1">
@@ -597,87 +498,11 @@ export function CheckoutForm({
                         </span>
                       </span>
                       <span className="mt-1 block text-[13.5px] font-medium text-ink-soft">
-                        Pay {formatINR(product.codPriceInPaise)} per unit by cash or UPI at your door. Mobile OTP verification is required.
+                        Pay {formatINR(product.codPriceInPaise)} per unit by cash or UPI at your door.
                       </span>
-                      {!codOtpEnabled ? (
-                        <span className="mt-1.5 block text-[12.5px] font-bold text-chili">
-                          COD is temporarily unavailable while mobile verification is being configured.
-                        </span>
-                      ) : null}
                     </span>
                   </label>
                 </div>
-
-                {paymentMethod === "cod" && codOtpEnabled ? (
-                  <div className="mt-4 rounded-2xl border border-sandline bg-cream/60 p-4">
-                    <div className="flex items-start gap-2.5">
-                      <span className="mt-0.5 rounded-full bg-white p-1.5 text-accent-deep">
-                        <HandCoins className="size-4" aria-hidden />
-                      </span>
-                      <div>
-                        <h3 className="font-bold text-ink">Verify mobile number for COD</h3>
-                        <p className="mt-0.5 text-[12.5px] leading-relaxed text-ink-soft">
-                          We&apos;ll send a one-time code to +91 {values.phone || "your mobile number"}. Your verified number is required before a COD order can be placed.
-                        </p>
-                      </div>
-                    </div>
-                    {codVerified ? (
-                      <p className="mt-3 flex items-center gap-1.5 text-[13px] font-bold text-leaf">
-                        <CheckCircle2 className="size-4" aria-hidden />
-                        Mobile number verified for this order
-                      </p>
-                    ) : (
-                      <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
-                        <input
-                          id="cod-otp"
-                          value={otpCode}
-                          onChange={(event) => {
-                            setOtpCode(event.target.value.replace(/\D/g, "").slice(0, 10));
-                            setOtpStatus(null);
-                          }}
-                          type="text"
-                          inputMode="numeric"
-                          autoComplete="one-time-code"
-                          maxLength={10}
-                          placeholder="Enter OTP"
-                          className={inputClasses(false)}
-                          aria-label="One-time password"
-                        />
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => void sendOtp()}
-                            disabled={otpBusy !== null}
-                            className={buttonClasses({ variant: "secondary", size: "md", className: "flex-1 whitespace-nowrap sm:flex-none" })}
-                          >
-                            {otpBusy === "send" ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
-                            {otpBusy === "send" ? "Sending…" : "Send OTP"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void verifyOtp()}
-                            disabled={otpBusy !== null || !otpCode}
-                            className={buttonClasses({ size: "md", className: "flex-1 whitespace-nowrap sm:flex-none" })}
-                          >
-                            {otpBusy === "verify" ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
-                            {otpBusy === "verify" ? "Verifying…" : "Verify"}
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                    {otpStatus ? (
-                      <p
-                        role="status"
-                        className={cn(
-                          "mt-2 text-[12.5px] font-semibold",
-                          codVerified ? "text-leaf" : "text-ink-soft",
-                        )}
-                      >
-                        {otpStatus}
-                      </p>
-                    ) : null}
-                  </div>
-                ) : null}
               </Card>
 
               {formError ? (

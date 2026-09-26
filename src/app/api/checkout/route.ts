@@ -16,11 +16,6 @@ import {
   readJson,
 } from "@/lib/http";
 import { rateLimit } from "@/lib/rate-limit";
-import {
-  CodPhoneVerificationError,
-  isCodOtpConfigured,
-  parseCodVerificationToken,
-} from "@/lib/cod-otp";
 
 export const runtime = "nodejs";
 
@@ -96,27 +91,6 @@ export async function POST(request: Request) {
       : product.priceInPaise;
   const total = unitPriceInPaise * input.quantity + product.shippingInPaise;
 
-  let codVerification: { tokenHash: string } | undefined;
-  if (input.paymentMethod === "cod") {
-    try {
-      if (!isCodOtpConfigured()) {
-        return jsonError(
-          503,
-          "Cash on Delivery verification is temporarily unavailable. Please pay online or contact support.",
-        );
-      }
-      codVerification = parseCodVerificationToken(input.codOtpToken, input.phone);
-    } catch (error) {
-      return jsonError(
-        400,
-        error instanceof CodPhoneVerificationError
-          ? error.message
-          : "Verify your mobile number with the OTP before placing a COD order.",
-        { fieldErrors: { phone: "Complete mobile verification for COD" } },
-      );
-    }
-  }
-
   if (input.paymentMethod === "online" && !isRazorpayConfigured()) {
     return jsonError(
       400,
@@ -140,7 +114,6 @@ export async function POST(request: Request) {
       quantity: input.quantity,
       paymentMethod: input.paymentMethod,
       product,
-      codVerification,
     });
 
     logEvent("order_created", {
@@ -205,11 +178,6 @@ export async function POST(request: Request) {
     logEvent("checkout_error", { error: message });
     if (err instanceof Error && err.name === "OutOfStockError") {
       return jsonError(409, "That last unit just sold out. Please try again.");
-    }
-    if (err instanceof CodPhoneVerificationError) {
-      return jsonError(400, err.message, {
-        fieldErrors: { phone: "Complete mobile verification for COD" },
-      });
     }
     return jsonError(
       500,

@@ -272,31 +272,6 @@ export const orders = pgTable(
   ],
 );
 
-/**
- * One-time tokens granted only after Twilio Verify approves a COD mobile OTP.
- * We store a SHA-256 hash, never the browser token or the OTP itself. `usedAt`
- * makes a verified phone authorization non-replayable.
- */
-export const codPhoneVerifications = pgTable(
-  "cod_phone_verifications",
-  {
-    id: uuid("id").primaryKey().defaultRandom(),
-    phone: varchar("phone", { length: 10 }).notNull(),
-    tokenHash: varchar("token_hash", { length: 64 }).notNull(),
-    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
-    verifiedAt: timestamp("verified_at", { withTimezone: true }).notNull(),
-    usedAt: timestamp("used_at", { withTimezone: true }),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (t) => [
-    uniqueIndex("cod_phone_verifications_token_hash_idx").on(t.tokenHash),
-    index("cod_phone_verifications_phone_idx").on(t.phone),
-    index("cod_phone_verifications_expires_idx").on(t.expiresAt),
-  ],
-);
-
 export const orderItems = pgTable(
   "order_items",
   {
