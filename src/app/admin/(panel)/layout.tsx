@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { LogOut } from "lucide-react";
-import { isAdmin } from "@/lib/admin-auth";
+import { requireAdmin } from "@/lib/auth/admin";
+import { roleHasPermission, type Permission } from "@/lib/auth/permissions";
+import { signOutAction } from "@/app/admin/login/actions";
+import { AdminNav } from "@/components/admin/nav";
 
 export const dynamic = "force-dynamic";
 
@@ -12,50 +14,88 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+/**
+ * Admin shell.
+ *
+ * `requireAdmin()` re-verifies the Supabase session AND the `admin_users` row
+ * on every request — src/proxy.ts only refreshes cookies, it is never the
+ * authorization boundary. Individual pages and every server action re-check
+ * their own permission on top of this.
+ */
+
+const NAV: { href: string; label: string; permission: Permission }[] = [
+  { href: "/admin", label: "Dashboard", permission: "dashboard.view" },
+  { href: "/admin/orders", label: "Orders", permission: "orders.view" },
+  { href: "/admin/payments", label: "Payments", permission: "payments.view" },
+  { href: "/admin/refunds", label: "Refunds", permission: "refunds.view" },
+  { href: "/admin/customers", label: "Customers", permission: "customers.view" },
+  { href: "/admin/product", label: "Product", permission: "product.view" },
+  { href: "/admin/inventory", label: "Inventory", permission: "inventory.view" },
+  { href: "/admin/messages", label: "Messages", permission: "messages.view" },
+  { href: "/admin/emails", label: "Emails", permission: "emails.view" },
+  { href: "/admin/webhooks", label: "Webhooks", permission: "webhooks.view" },
+  { href: "/admin/settings", label: "Settings", permission: "settings.view" },
+  { href: "/admin/admins", label: "Admin users", permission: "admins.view" },
+  { href: "/admin/audit", label: "Audit log", permission: "audit.view" },
+];
+
+const ROLE_LABELS: Record<string, string> = {
+  owner: "Owner",
+  admin: "Admin",
+  support: "Support",
+  fulfillment: "Fulfillment",
+};
+
 export default async function AdminPanelLayout({
   children,
 }: {
   children: ReactNode;
 }) {
-  if (!(await isAdmin())) redirect("/admin/login");
+  const actor = await requireAdmin();
 
-  async function logout() {
-    "use server";
-    const { clearAdminSession } = await import("@/lib/admin-auth");
-    await clearAdminSession();
-    redirect("/admin/login");
-  }
+  // Navigation is filtered for usability only. Hiding a link is never a
+  // security control — the target page and its actions enforce the same
+  // permission server-side.
+  const items = NAV.filter((item) =>
+    roleHasPermission(actor.role, item.permission),
+  ).map(({ href, label }) => ({ href, label }));
 
   return (
-    <div className="min-h-[60vh] bg-cream/40">
-      <div className="border-b border-sandline bg-ink text-paper">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 md:px-8">
-          <p className="font-display text-lg font-bold">
-            beevo<span className="text-accent">.</span>{" "}
-            <span className="text-sm font-sans font-bold text-paper/60">
-              admin
+    <div className="min-h-[70vh] bg-cream/40">
+      <header className="border-b border-sandline bg-ink text-paper">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between gap-4 px-5 md:px-8">
+          <div className="flex items-baseline gap-2">
+            <p className="font-display text-lg font-bold">
+              beevo<span className="text-accent">.</span>
+            </p>
+            <span className="text-sm font-bold text-paper/60">admin</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="hidden text-[12.5px] font-semibold text-paper/70 sm:inline">
+              {actor.name} · {ROLE_LABELS[actor.role] ?? actor.role}
             </span>
-          </p>
-          <div className="flex items-center gap-4">
             <Link
               href="/"
               className="text-[13px] font-bold text-paper/70 hover:text-paper"
             >
               View store
             </Link>
-            <form action={logout}>
+            <form action={signOutAction}>
               <button
                 type="submit"
-                className="inline-flex items-center gap-1.5 rounded-full border border-paper/30 px-4 py-1.5 text-[13px] font-bold hover:bg-paper/10"
+                className="inline-flex items-center gap-1.5 rounded-full border border-paper/30 px-3.5 py-1.5 text-[13px] font-bold hover:bg-paper/10"
               >
                 <LogOut className="size-3.5" aria-hidden />
-                Log out
+                Sign out
               </button>
             </form>
           </div>
         </div>
-      </div>
-      <div className="mx-auto max-w-6xl px-5 py-8 md:px-8">{children}</div>
+      </header>
+
+      <AdminNav items={items} />
+
+      <div className="mx-auto max-w-7xl px-5 py-7 md:px-8">{children}</div>
     </div>
   );
 }

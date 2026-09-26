@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import { CheckCircle2 } from "lucide-react";
-import { product } from "@/lib/config";
+import type { StorefrontProduct } from "@/lib/product-types";
 import { formatINR } from "@/lib/format";
 
 const STORAGE_KEY = "beevo-cart-v1";
@@ -22,6 +22,8 @@ type CartState = {
   subtotalInPaise: number;
   maxPerOrder: number;
   hydrated: boolean;
+  /** The authoritative product, read from the database on the server. */
+  product: StorefrontProduct;
   add: (qty?: number) => void;
   setQty: (qty: number) => void;
   clear: () => void;
@@ -29,27 +31,47 @@ type CartState = {
 
 const CartContext = createContext<CartState | null>(null);
 
-const clampQty = (qty: number) =>
-  Math.min(Math.max(Math.round(qty) || 0, 0), product.maxPerOrder);
+/**
+ * Cart + product context.
+ *
+ * The product (price, max per order, stock) is injected by the server layout
+ * from the `products` table — the storefront never hard-codes commercial
+ * values, and the checkout API re-validates everything anyway.
+ */
+export function CartProvider({
+  children,
+  product,
+}: {
+  children: ReactNode;
+  product: StorefrontProduct;
+}) {
+  const cap = Math.max(1, Math.min(product.maxPerOrder, product.availableQuantity || product.maxPerOrder));
+  const clampQty = useCallback(
+    (value: number) => Math.min(Math.max(Math.round(value) || 0, 0), cap),
+    [cap],
+  );
 
-export function CartProvider({ children }: { children: ReactNode }) {
   const [qty, setQtyState] = useState(0);
   const [hydrated, setHydrated] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Hydration pass: localStorage is a browser-only external store, so it can
+  // only be read after mount. This is the documented escape hatch for syncing
+  // React state from an external system that does not exist during SSR.
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const parsed = JSON.parse(raw) as { qty?: number };
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- reading the persisted cart on mount
         setQtyState(clampQty(Number(parsed.qty ?? 0)));
       }
     } catch {
       // Corrupt storage — start fresh.
     }
     setHydrated(true);
-  }, []);
+  }, [clampQty]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -68,18 +90,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const add = useCallback(
     (amount = 1) => {
-      setQtyState((current) => {
-        const next = Math.min(current + amount, product.maxPerOrder);
-        return next;
-      });
+      setQtyState((current) => clampQty(current + amount));
       showToast("Added to your cart");
     },
-    [showToast],
+    [showToast, clampQty],
   );
 
-  const setQty = useCallback((next: number) => {
-    setQtyState(clampQty(next));
-  }, []);
+  const setQty = useCallback(
+    (next: number) => {
+      setQtyState(clampQty(next));
+    },
+    [clampQty],
+  );
 
   const clear = useCallback(() => setQtyState(0), []);
 
@@ -87,13 +109,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
     () => ({
       qty,
       subtotalInPaise: qty * product.priceInPaise,
-      maxPerOrder: product.maxPerOrder,
+      maxPerOrder: cap,
       hydrated,
+      product,
       add,
       setQty,
       clear,
     }),
-    [qty, hydrated, add, setQty, clear],
+    [qty, hydrated, product, cap, add, setQty, clear],
   );
 
   return (
@@ -121,6 +144,8 @@ export function useCart(): CartState {
   return ctx;
 }
 
-export function cartLineSummary(qty: number): string {
-  return `${product.shortName} × ${qty} — ${formatINR(qty * product.priceInPaise)}`;
+/** Convenience accessor for components that only need the product. */
+export function useProduct(): StorefrontProduct {
+  return useCart().product;
 }
+

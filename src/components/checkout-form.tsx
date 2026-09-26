@@ -15,8 +15,8 @@ import {
   Plus,
   ShoppingBag,
 } from "lucide-react";
-import { product, site } from "@/lib/config";
-import { INDIAN_STATES, checkoutSchema } from "@/lib/validations";
+import { site } from "@/lib/config";
+import { INDIAN_STATES, buildCheckoutSchema } from "@/lib/validations";
 import { formatINR } from "@/lib/format";
 import { cn } from "@/lib/cn";
 import { useCart } from "./cart-store";
@@ -82,7 +82,7 @@ export function CheckoutForm({
   razorpayKeyId: string;
 }) {
   const router = useRouter();
-  const { qty, setQty, subtotalInPaise, hydrated, maxPerOrder, clear } =
+  const { qty, setQty, subtotalInPaise, hydrated, maxPerOrder, clear, product } =
     useCart();
   const [values, setValues] = useState<FormValues>(EMPTY);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -91,7 +91,10 @@ export function CheckoutForm({
   const [submitting, setSubmitting] = useState(false);
   const [statusNote, setStatusNote] = useState<string | null>(null);
 
-  const totalInPaise = subtotalInPaise; // shipping is free
+  // Shipping comes from the database; the server recomputes this total from
+  // the authoritative product row before charging anything.
+  const shippingInPaise = product.shippingInPaise;
+  const totalInPaise = subtotalInPaise + shippingInPaise;
 
   const set =
     (key: keyof FormValues) =>
@@ -113,7 +116,7 @@ export function CheckoutForm({
     e.preventDefault();
     setFormError(null);
 
-    const parsed = checkoutSchema.safeParse({
+    const parsed = buildCheckoutSchema(product.maxPerOrder).safeParse({
       ...values,
       quantity: qty,
       paymentMethod,
@@ -529,7 +532,7 @@ export function CheckoutForm({
                 <div className="flex gap-4">
                   <span className="relative size-20 shrink-0 overflow-hidden rounded-xl border border-sandline">
                     <Image
-                      src={product.images[0].src}
+                      src={product.images[0]?.src ?? "/images/product-1.jpg"}
                       alt={product.name}
                       fill
                       sizes="80px"
@@ -580,7 +583,17 @@ export function CheckoutForm({
                   </div>
                   <div className="flex justify-between">
                     <dt className="font-semibold text-ink-soft">Shipping</dt>
-                    <dd className="font-bold text-leaf">FREE</dd>
+                    <dd
+                      className={
+                        shippingInPaise === 0
+                          ? "font-bold text-leaf"
+                          : "font-mono font-bold tabular-nums"
+                      }
+                    >
+                      {shippingInPaise === 0
+                        ? "FREE"
+                        : formatINR(shippingInPaise)}
+                    </dd>
                   </div>
                   <div className="dashed-rule my-1.5" />
                   <div className="flex items-baseline justify-between">

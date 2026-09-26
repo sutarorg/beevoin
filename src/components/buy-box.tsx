@@ -12,20 +12,46 @@ import {
   Undo2,
   Zap,
 } from "lucide-react";
-import { product } from "@/lib/config";
 import { formatINR } from "@/lib/format";
+import { STOCK_LABELS } from "@/lib/product-types";
 import { buttonClasses, TrustChip } from "./ui";
 import { useCart } from "./cart-store";
 
 export function BuyBox() {
   const router = useRouter();
-  const { add, setQty } = useCart();
+  const { add, setQty, product, maxPerOrder } = useCart();
   const [qty, setLocalQty] = useState(1);
 
   const buyNow = () => {
     setQty(qty);
     router.push("/checkout");
   };
+
+  // Stock/pricing come from the database via the server layout. When the
+  // product is unavailable we never invent a price or let the buyer proceed.
+  if (!product.purchasable) {
+    return (
+      <div className="min-w-0 space-y-4" data-testid="buy-box">
+        <p className="font-display text-[2.1rem] font-bold leading-none tracking-tight text-ink">
+          {product.priceInPaise > 0 ? formatINR(product.priceInPaise) : "—"}
+        </p>
+        <p className="inline-flex rounded-full bg-chili-soft px-4 py-2 text-sm font-bold text-chili">
+          {STOCK_LABELS[product.stockState]}
+        </p>
+        <p className="text-sm font-semibold text-ink-soft">
+          {product.stockState === "out_of_stock"
+            ? "We've sold out for now. Check back shortly — restocks are frequent."
+            : "This product isn't available for purchase right now."}
+        </p>
+        <ul className="flex flex-wrap gap-x-5 gap-y-2 pt-1">
+          <TrustChip icon={<Truck />}>Free shipping</TrustChip>
+          <TrustChip icon={<HandCoins />}>COD available</TrustChip>
+          <TrustChip icon={<Undo2 />}>7-day replacement</TrustChip>
+          <TrustChip icon={<ShieldCheck />}>Secure checkout</TrustChip>
+        </ul>
+      </div>
+    );
+  }
 
   return (
     <div className="min-w-0 space-y-5" data-testid="buy-box">
@@ -34,8 +60,16 @@ export function BuyBox() {
           {formatINR(product.priceInPaise)}
         </p>
         <p className="pb-1 text-sm font-semibold text-ink-faint">
-          Inclusive of all taxes · Free shipping
+          Inclusive of all taxes ·{" "}
+          {product.shippingInPaise === 0
+            ? "Free shipping"
+            : `${formatINR(product.shippingInPaise)} shipping`}
         </p>
+        {product.stockState === "low_stock" ? (
+          <p className="pb-1 text-sm font-bold text-haldi">
+            Only {product.availableQuantity} left
+          </p>
+        ) : null}
       </div>
 
       <div className="flex items-center gap-3">
@@ -65,9 +99,9 @@ export function BuyBox() {
           <button
             type="button"
             onClick={() =>
-              setLocalQty((q) => Math.min(product.maxPerOrder, q + 1))
+              setLocalQty((q) => Math.min(maxPerOrder, q + 1))
             }
-            disabled={qty >= product.maxPerOrder}
+            disabled={qty >= maxPerOrder}
             className="p-3 text-ink transition disabled:opacity-30"
             aria-label="Increase quantity"
           >
@@ -75,7 +109,7 @@ export function BuyBox() {
           </button>
         </div>
         <span className="text-xs font-semibold text-ink-faint">
-          Max {product.maxPerOrder} per order
+          Max {maxPerOrder} per order
         </span>
       </div>
 

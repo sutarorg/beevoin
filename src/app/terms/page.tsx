@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { L, LegalPage, P } from "@/components/legal-page";
-import { product, site } from "@/lib/config";
+import { formatINR } from "@/lib/format";
+import { site } from "@/lib/config";
+import { getStorefrontProduct } from "@/lib/services/products";
+import { UNAVAILABLE_PRODUCT } from "@/lib/product-types";
 
 export const metadata: Metadata = {
   title: "Terms & conditions",
@@ -9,7 +12,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "/terms" },
 };
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  const product = (await getStorefrontProduct()) ?? UNAVAILABLE_PRODUCT;
+
   return (
     <LegalPage
       title="Terms & Conditions"
@@ -33,10 +38,12 @@ export default function TermsPage() {
           body: (
             <>
               <P>
-                The product is priced at ₹1,499 per unit, inclusive of GST and
-                all applicable taxes. Shipping is free across serviceable
-                Indian pincodes — the total you see at checkout is the total
-                you pay.
+                The product is priced at {formatINR(product.priceInPaise)} per
+                unit, inclusive of GST and all applicable taxes.{" "}
+                {product.shippingInPaise === 0
+                  ? "Shipping is free across serviceable Indian pincodes"
+                  : `Shipping is ${formatINR(product.shippingInPaise)}`}{" "}
+                — the total you see at checkout is the total you pay.
               </P>
               <P>
                 We don&apos;t inflate MRPs to show fake discounts, and we

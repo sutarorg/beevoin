@@ -2,7 +2,7 @@
  * Central marketing & help copy. Every claim here maps to a verified product
  * characteristic or an actual store policy implemented in code.
  */
-import { policies, product } from "./config";
+import { policies, productDefaults } from "./config";
 
 export const HERO = {
   eyebrow: "Beevo Go · Pocket Thermal Printer",
@@ -180,7 +180,7 @@ export const FAQS: { q: string; a: string }[] = [
     a: `If your printer arrives damaged, defective or not as described, request a replacement or refund within ${policies.replacementWindowDays} days of delivery — details are on the Returns & Refunds page.`,
   },
   {
-    q: `Is ${product.shortName} covered by warranty?`,
+    q: `Is ${productDefaults.shortName} covered by warranty?`,
     a: `We offer a ${policies.replacementWindowDays}-day replacement promise for manufacturing defects. Reach out with your order ID and a short video of the issue and we'll take care of the rest.`,
   },
 ];

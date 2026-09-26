@@ -165,12 +165,34 @@ const templateDefs = {
   refunded: {
     subject: (o: Order) => `Refund issued for ${o.orderNumber}`,
     heading: () => "Your refund is on its way",
+    body: (o: Order, ctx?: OrderEmailContext) => {
+      const amount = ctx?.refundAmountInPaise ?? o.totalInPaise;
+      const partial = amount < o.totalInPaise;
+      return (
+        para(
+          `We've issued a ${partial ? "partial " : ""}refund of <strong>${formatINR(amount)}</strong> for order ${escapeHtml(o.orderNumber)}. It should reflect in the original payment method within 5–7 business days, depending on your bank.`,
+        ) + orderSummary(o)
+      );
+    },
+  },
+  payment_failed: {
+    subject: (o: Order) => `Payment could not be completed — ${o.orderNumber}`,
+    heading: () => "Your payment didn't go through",
     body: (o: Order) =>
       para(
-        `We've issued a refund of <strong>${formatINR(o.totalInPaise)}</strong> for order ${escapeHtml(o.orderNumber)}. It should reflect in the original payment method within 5–7 business days, depending on your bank.`,
-      ) + orderSummary(o),
+        "We couldn't confirm your online payment, so your order has not been charged. If your bank shows a deduction it will be reversed automatically, usually within 5–7 business days.",
+      ) +
+      para(
+        "You can try again from the tracking link below, or write to us and we'll place the order as Cash on Delivery instead.",
+      ) +
+      orderSummary(o),
   },
 } as const;
+
+/** Extra, event-specific values a template may need (e.g. partial refunds). */
+export type OrderEmailContext = {
+  refundAmountInPaise?: number;
+};
 
 export type EmailTemplateKey = keyof typeof templateDefs;
 
@@ -202,6 +224,7 @@ export function templateForStatus(
 export function renderOrderEmail(
   order: Order,
   template: EmailTemplateKey,
+  context?: OrderEmailContext,
 ): { subject: string; html: string } {
   const def = templateDefs[template];
   const statusLine = STATUS_META[order.status]?.label ?? "";
@@ -210,8 +233,85 @@ export function renderOrderEmail(
     html: shell({
       preheader: `${def.subject(order)} — ${statusLine}`,
       heading: def.heading(order),
-      body: def.body(order),
+      body: (def.body as (o: Order, ctx?: OrderEmailContext) => string)(
+        order,
+        context,
+      ),
       trackUrl: trackUrl(order),
     }),
+  };
+}
+
+/* ------------------------------------------------------------------ *
+ * Internal operator notifications. Plain, minimal, never promotional
+ * and never sent to a customer.
+ * ------------------------------------------------------------------ */
+
+const adminTemplateDefs = {
+  contact_notification: {
+    subject: (d: Record<string, string>) =>
+      `Beevo contact — ${d.topic ?? "general"}${d.orderNumber ? ` (${d.orderNumber})` : ""}`,
+    heading: () => "New contact-form message",
+    rows: (d: Record<string, string>) => [
+      ["From", `${d.name ?? ""} <${d.email ?? ""}>`],
+      ["Phone", d.phone || "not provided"],
+      ["Topic", d.topic ?? "general"],
+      ["Order", d.orderNumber || "—"],
+      ["Message", d.message ?? ""],
+    ],
+  },
+  low_inventory_alert: {
+    subject: (d: Record<string, string>) =>
+      `Low stock — ${d.sku ?? ""} has ${d.quantity ?? "0"} left`,
+    heading: () => "Inventory is running low",
+    rows: (d: Record<string, string>) => [
+      ["Product", d.productName ?? ""],
+      ["SKU", d.sku ?? ""],
+      ["Units remaining", d.quantity ?? "0"],
+      ["Low-stock threshold", d.threshold ?? ""],
+    ],
+  },
+  payment_failure_alert: {
+    subject: (d: Record<string, string>) =>
+      `Payment failed — ${d.orderNumber ?? ""}`,
+    heading: () => "An online payment failed",
+    rows: (d: Record<string, string>) => [
+      ["Order", d.orderNumber ?? ""],
+      ["Amount", d.amount ?? ""],
+      ["Reason", d.reason ?? "unknown"],
+    ],
+  },
+} as const;
+
+export type AdminTemplateKey = keyof typeof adminTemplateDefs;
+
+export function renderAdminEmail(
+  template: AdminTemplateKey,
+  data: Record<string, string>,
+): { subject: string; html: string } {
+  const def = adminTemplateDefs[template];
+  const rows = def
+    .rows(data)
+    .map(
+      ([label, value]) =>
+        `<tr><td style="padding:6px 0;font-family:Arial,sans-serif;font-size:13px;color:#8A8172;width:150px;vertical-align:top;">${escapeHtml(label)}</td><td style="padding:6px 0;font-family:Arial,sans-serif;font-size:14px;color:${INK};white-space:pre-wrap;">${escapeHtml(value)}</td></tr>`,
+    )
+    .join("");
+
+  const subject = def.subject(data);
+  return {
+    subject,
+    html: `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>${escapeHtml(subject)}</title></head>
+<body style="margin:0;padding:24px;background:#F4EEE3;">
+<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:14px;border:1px solid #E8E0D0;">
+  <tr><td style="background:${INK};padding:16px 24px;">
+    <span style="font-family:Georgia,serif;font-size:20px;font-weight:700;color:#ffffff;">beevo<span style="color:${ACCENT};">.</span> <span style="font-family:Arial,sans-serif;font-size:12px;color:#ffffffaa;">operations</span></span>
+  </td></tr>
+  <tr><td style="padding:24px;">
+    <h1 style="margin:0 0 16px;font-family:Georgia,serif;font-size:20px;color:${INK};">${escapeHtml(def.heading())}</h1>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${rows}</table>
+  </td></tr>
+</table>
+</body></html>`,
   };
 }

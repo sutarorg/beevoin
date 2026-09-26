@@ -1,6 +1,9 @@
+import { eq } from "drizzle-orm";
 import { db } from "@/db";
 import { contactMessages } from "@/db/schema";
 import { contactSchema } from "@/lib/validations";
+import { sendAdminNotification } from "@/lib/email/send";
+import { notificationEmail } from "@/lib/services/settings";
 import {
   getClientIp,
   isSameOrigin,
@@ -10,10 +13,25 @@ import {
   readJson,
 } from "@/lib/http";
 import { rateLimit } from "@/lib/rate-limit";
-import { forwardToWeb3Forms, web3formsKey } from "@/lib/web3forms";
 
 export const runtime = "nodejs";
 
+const TOPIC_LABELS: Record<string, string> = {
+  general: "General enquiry",
+  order: "Order help",
+  shipping: "Shipping & delivery",
+  returns: "Returns & refunds",
+  product: "Product question",
+};
+
+/**
+ * Contact form.
+ *
+ * The durable record is our own `contact_messages` table (visible at
+ * /admin/messages). Notification delivery goes through Resend — the previous
+ * Web3Forms dependency has been removed. A delivery failure never loses the
+ * message.
+ */
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) return jsonError(403, "Invalid request origin.");
 
@@ -39,39 +57,48 @@ export async function POST(request: Request) {
   const input = parsed.data;
 
   try {
-    await db.insert(contactMessages).values({
-      name: input.name,
-      email: input.email.toLowerCase(),
-      phone: input.phone || null,
-      topic: input.topic,
-      orderNumber: input.orderNumber ? input.orderNumber.toUpperCase() : null,
-      message: input.message,
-    });
+    const [message] = await db
+      .insert(contactMessages)
+      .values({
+        name: input.name,
+        email: input.email.toLowerCase(),
+        phone: input.phone || null,
+        topic: input.topic,
+        orderNumber: input.orderNumber ? input.orderNumber.toUpperCase() : null,
+        message: input.message,
+        status: "new",
+      })
+      .returning({ id: contactMessages.id });
+
     logEvent("contact_message", { topic: input.topic });
 
-    // Web3Forms delivery (emails the store owner). Server-side delivery works
-    // on Pro plans; on the free tier we hand the key to this validated,
-    // rate-limited client so it can complete the submission from the browser.
-    let web3formsFallbackKey: string | undefined;
-    let web3formsDelivered = false;
-    const key = web3formsKey();
-    if (key) {
-      const result = await forwardToWeb3Forms(input, key);
-      if (result.status === "delivered") {
-        web3formsDelivered = true;
-      } else if (result.status === "client-side-required") {
-        web3formsFallbackKey = key;
-        logEvent("web3forms_requires_client");
-      } else {
-        logEvent("web3forms_failed", { error: result.error });
-      }
+    // Notification is best-effort: the message is already safely stored.
+    const to = await notificationEmail();
+    const delivery = await sendAdminNotification({
+      template: "contact_notification",
+      to,
+      eventKey: `contact:${message.id}`,
+      replyTo: input.email,
+      data: {
+        name: input.name,
+        email: input.email,
+        phone: input.phone ? `+91 ${input.phone}` : "",
+        topic: TOPIC_LABELS[input.topic] ?? input.topic,
+        orderNumber: input.orderNumber?.toUpperCase() ?? "",
+        message: input.message,
+      },
+    });
+
+    if (delivery === "sent") {
+      await db
+        .update(contactMessages)
+        .set({ notifiedAt: new Date() })
+        .where(eq(contactMessages.id, message.id));
     }
 
     return jsonOk({
       message:
         "Thanks for writing to us — we usually reply within one business day.",
-      web3formsDelivered,
-      ...(web3formsFallbackKey ? { web3formsFallbackKey } : {}),
     });
   } catch (err) {
     logEvent("contact_error", {
