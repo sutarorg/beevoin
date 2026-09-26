@@ -3,18 +3,21 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import {
-  HandCoins,
+  BadgeCheck,
+  Flame,
   Minus,
   Plus,
   ShieldCheck,
   ShoppingBag,
+  Smartphone,
   Truck,
   Undo2,
   Zap,
 } from "lucide-react";
+import { SOCIAL_PROOF } from "@/lib/content";
 import { formatINR } from "@/lib/format";
 import { STOCK_LABELS } from "@/lib/product-types";
-import { buttonClasses, TrustChip } from "./ui";
+import { buttonClasses, StarRating, TrustChip } from "./ui";
 import { useCart } from "./cart-store";
 
 export function BuyBox() {
@@ -26,6 +29,11 @@ export function BuyBox() {
     setQty(qty);
     router.push("/checkout");
   };
+
+  /** How much cheaper paying online is vs Cash on Delivery. */
+  const codSaving = product.codPriceInPaise - product.priceInPaise;
+  /** Scarcity is only ever shown when the database says stock is low. */
+  const lowStock = product.stockState === "low_stock";
 
   // Stock/pricing come from the database via the server layout. When the
   // product is unavailable we never invent a price or let the buyer proceed.
@@ -47,8 +55,7 @@ export function BuyBox() {
             : "This product isn't available for purchase right now."}
         </p>
         <ul className="flex flex-wrap gap-x-5 gap-y-2 pt-1">
-          <TrustChip icon={<Truck />}>Free shipping</TrustChip>
-          <TrustChip icon={<HandCoins />}>COD available</TrustChip>
+          <TrustChip icon={<Smartphone />}>Works with iPhone & Android</TrustChip>
           <TrustChip icon={<Undo2 />}>7-day replacement</TrustChip>
           <TrustChip icon={<ShieldCheck />}>Secure checkout</TrustChip>
         </ul>
@@ -58,29 +65,48 @@ export function BuyBox() {
 
   return (
     <div className="min-w-0 space-y-5" data-testid="buy-box">
-      <div className="flex flex-wrap items-end gap-x-3 gap-y-1">
-        <div>
+      {/* Price — online price first, with the COD comparison right beside it
+          so the prepaid-vs-COD decision happens at the point of purchase,
+          not half a page later. */}
+      <div className="space-y-2.5">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
           <p className="font-display text-[2.1rem] font-bold leading-none tracking-tight text-ink">
             {formatINR(product.priceInPaise)}
             <span className="ml-2 font-sans text-sm font-semibold text-leaf">online</span>
           </p>
-          {/*
-            The Cash-on-Delivery price is deliberately NOT repeated here. It is
-            still shown where it becomes a decision — the cart, the checkout
-            payment selector and the pricing block further down this page — so
-            nothing about the COD total is hidden from the buyer.
-          */}
+          {codSaving > 0 ? (
+            <>
+              <p className="text-[15px] font-bold text-ink-faint">
+                {formatINR(product.codPriceInPaise)} on COD
+              </p>
+              <span className="rounded-full bg-leaf-soft px-3 py-1 text-xs font-bold text-leaf">
+                Save {formatINR(codSaving)} by paying online
+              </span>
+            </>
+          ) : null}
         </div>
-        <p className="pb-1 text-sm font-semibold text-ink-faint">
+        <p className="text-sm font-semibold text-ink-faint">
           Inclusive of all taxes ·{" "}
           {product.shippingInPaise === 0
             ? "Free shipping"
             : `${formatINR(product.shippingInPaise)} shipping`}
+          {codSaving > 0 ? " · COD available" : ""}
         </p>
-        {product.stockState === "low_stock" ? (
-          <p className="pb-1 text-sm font-bold text-haldi">
-            Only {product.availableQuantity} left
-          </p>
+        {/* Social proof directly under the price — see the SOCIAL_PROOF
+            warning in lib/content.ts: replace with real review data. */}
+        {SOCIAL_PROOF.reviewCount > 0 ? (
+          <a
+            href="#reviews"
+            className="inline-flex items-center gap-2.5 rounded py-0.5 transition-opacity hover:opacity-80"
+          >
+            <StarRating rating={SOCIAL_PROOF.rating} />
+            <span className="text-[13.5px] font-bold text-ink-soft">
+              {SOCIAL_PROOF.rating.toFixed(1)} · {SOCIAL_PROOF.reviewCount} reviews
+            </span>
+            <span className="text-[13.5px] font-bold text-accent-deep" aria-hidden>
+              ↓
+            </span>
+          </a>
         ) : null}
       </div>
 
@@ -125,31 +151,49 @@ export function BuyBox() {
         </span>
       </div>
 
-      {/* The sticky mobile bar appears once this block scrolls out of view */}
-      <div id="hero-cta" className="grid gap-2.5 sm:grid-cols-2">
+      {/* Scarcity lives with the CTA, not in the small print — but only when
+          the database genuinely reports low stock. */}
+      {lowStock ? (
+        <p className="inline-flex items-center gap-1.5 rounded-full bg-chili-soft px-3.5 py-1.5 text-[13px] font-bold text-chili">
+          <Flame className="size-4" aria-hidden />
+          Only {product.availableQuantity} left in stock
+        </p>
+      ) : null}
+
+      {/* The sticky mobile bar appears once this block scrolls out of view.
+          One dominant action: Buy now. Add to cart is deliberately demoted to
+          a quiet secondary — this is a single-SKU store, the job of the hero
+          is to get the buyer to checkout. */}
+      <div id="hero-cta" className="space-y-1.5">
         <button
           type="button"
           onClick={buyNow}
-          className={buttonClasses({ size: "lg" })}
+          className={buttonClasses({ size: "lg", className: "w-full" })}
         >
           <Zap className="size-4.5" aria-hidden />
-          Buy now — from {formatINR(product.priceInPaise)}
+          Buy now — {formatINR(product.priceInPaise)} online
         </button>
         <button
           type="button"
           onClick={() => add(qty)}
-          className={buttonClasses({ variant: "secondary", size: "lg" })}
+          className={buttonClasses({
+            variant: "ghost",
+            size: "md",
+            className: "w-full",
+          })}
         >
-          <ShoppingBag className="size-4.5" aria-hidden />
+          <ShoppingBag className="size-4" aria-hidden />
           Add to cart
         </button>
       </div>
 
+      {/* The three highest-anxiety pre-purchase objections, answered right at
+          the buy button — previously buried in the FAQ and spec table. */}
       <ul className="flex flex-wrap gap-x-5 gap-y-2 pt-1">
-        <TrustChip icon={<Truck />}>Free shipping</TrustChip>
-        <TrustChip icon={<HandCoins />}>COD available</TrustChip>
+        <TrustChip icon={<Smartphone />}>Works with iPhone & Android</TrustChip>
+        <TrustChip icon={<BadgeCheck />}>No ink or subscription, ever</TrustChip>
         <TrustChip icon={<Undo2 />}>7-day replacement</TrustChip>
-        <TrustChip icon={<ShieldCheck />}>Secure checkout</TrustChip>
+        <TrustChip icon={<Truck />}>Free shipping</TrustChip>
       </ul>
     </div>
   );

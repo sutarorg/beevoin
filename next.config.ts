@@ -16,6 +16,10 @@ import type { NextConfig } from "next";
  *   • va.vercel-scripts.com
  *       Vercel Analytics uses this only for its development diagnostic script;
  *       deployed projects load /_vercel/insights from the same origin.
+ *   • www.youtube-nocookie.com / www.youtube.com
+ *       The click-to-play demo video facade (src/components/video-card.tsx)
+ *       mounts a privacy-enhanced YouTube embed only after the visitor taps
+ *       play — no third-party script loads until then.
  *
  * `'unsafe-inline'` is required for scripts because Next.js injects inline
  * bootstrap/flight payloads and Razorpay Checkout injects inline handlers.
@@ -46,7 +50,7 @@ const csp = [
   `connect-src 'self' https://api.razorpay.com https://lumberjack.razorpay.com https://checkout.razorpay.com https://va.vercel-scripts.com${
     supabaseOrigin ? ` ${supabaseOrigin} ${supabaseOrigin.replace("https://", "wss://")}` : ""
   }`,
-  "frame-src https://api.razorpay.com https://checkout.razorpay.com",
+  "frame-src https://api.razorpay.com https://checkout.razorpay.com https://www.youtube-nocookie.com https://www.youtube.com",
   "upgrade-insecure-requests",
 ].join("; ");
 

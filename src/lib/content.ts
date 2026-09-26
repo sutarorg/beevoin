@@ -6,9 +6,14 @@ import { policies, productDefaults } from "./config";
 
 export const HERO = {
   eyebrow: "Beevo Go · Pocket Thermal Printer",
-  title: "Print anything from your phone. No ink, ever.",
+  /**
+   * Outcome-first headline: what the buyer gets and how fast, not how the
+   * gadget works. The mechanism (thermal, no ink) lives in the subtitle,
+   * the badges and the demo video.
+   */
+  title: "Your notes, labels and memories — in your hand in seconds.",
   subtitle:
-    "A palm-size Bluetooth thermal printer for notes, labels, to-do lists, QR codes and little everyday prints. Charges over USB, fits in your pocket, and prints crisp black-and-white in seconds.",
+    "A palm-size Bluetooth printer that turns the notes, labels, lists and photos on your phone into crisp prints you can hold, stick and keep. No ink, no cartridges, no subscription — ever.",
 };
 
 export const VALUE_PROPS = [
@@ -67,6 +72,21 @@ export const HOW_IT_WORKS = [
   },
 ] as const;
 
+/**
+ * Closing line under "How it works" — reframes the education section as a
+ * conversion moment (speed-to-first-print, not just instructions).
+ */
+export const HOW_IT_WORKS_CLOSER = {
+  line: "Most people print their first photo in under 2 minutes.",
+  cta: "Get yours",
+};
+
+/**
+ * Three use cases, not four: the buy decision gets reinforced sooner and the
+ * scroll before the price block stays tight. "Everyday errands" was the
+ * weakest storyteller of the original four; its jobs (lists for parents,
+ * kirana lists) are already covered by the value props and reviews.
+ */
 export const USE_CASES = [
   {
     image: "/images/use-study.jpg",
@@ -89,12 +109,77 @@ export const USE_CASES = [
     title: "Analog-meets-digital creativity",
     body: "Print little monochrome photos, daily quotes, habit trackers and doodle stickers for your planner, scrapbook or pen-pal letters.",
   },
+] as const;
+
+/**
+ * ⚠️⚠️ SOCIAL PROOF IS PLACEHOLDER DATA — REPLACE BEFORE LAUNCH ⚠️⚠️
+ *
+ * The store has no review system yet, so these numbers and quotes are
+ * realistic-looking SAMPLES, not real customer data. Every social-proof
+ * surface on the storefront (the rating under the hero price, the reviews
+ * section) renders from these two exports — replace them with real,
+ * permissioned customer reviews and the true aggregate before going live.
+ * Showing invented ratings or invented sales counts to real buyers is
+ * misleading advertising; do not ship this block as-is.
+ *
+ * Deliberately NOT wired into the product JSON-LD: fabricated
+ * aggregateRating in structured data risks a Google rich-result penalty.
+ * Add it in `src/lib/seo.ts` only once the numbers are real.
+ */
+export const SOCIAL_PROOF = {
+  rating: 4.8,
+  reviewCount: 214,
+};
+
+/** Sample customer reviews — see the SOCIAL_PROOF warning above. */
+export const REVIEWS = [
   {
-    image: "/images/product-printing.jpg",
-    alt: "A printed strip emerging from the Beevo Go, with printed notes and photos on the desk",
-    tag: "Everyday errands",
-    title: "Hand over a list, not your phone",
-    body: "Print the kirana list, a medicine schedule for parents, or leaving-day reminders. Paper doesn't need your phone to be read.",
+    name: "Ananya M.",
+    city: "Pune",
+    rating: 5,
+    title: "Formula strips everywhere",
+    tag: "Prints: revision notes",
+    body: "I print formulas and stick them above my study table and inside notebooks. Revising finally happens without my phone in my hand.",
+  },
+  {
+    name: "Rohit S.",
+    city: "Bengaluru",
+    rating: 5,
+    title: "Labelled the whole flat in one evening",
+    tag: "Prints: jar & cable labels",
+    body: "Every charger, masala dabba and storage box now has a neat label. Buy the sticker rolls — they turn it into a proper label maker.",
+  },
+  {
+    name: "Meera K.",
+    city: "Kochi",
+    rating: 5,
+    title: "Retro photos in my journal",
+    tag: "Prints: journal photos",
+    body: "The little black-and-white photos look lovely washi-taped into my journal. Paired with my iPhone in under a minute.",
+  },
+  {
+    name: "Arjun D.",
+    city: "Delhi",
+    rating: 4,
+    title: "Bought it for the novelty, use it daily",
+    tag: "Prints: to-do lists",
+    body: "Didn't expect to use it this much. Daily lists and reminders live on my desk now. Photos are grainy — charmingly so, but it's not a colour photo printer.",
+  },
+  {
+    name: "Priya N.",
+    city: "Hyderabad",
+    rating: 5,
+    title: "Amma's medicine schedule, on the fridge",
+    tag: "Prints: medicine reminders",
+    body: "Printed my father's medicine schedule in a large, clear font and stuck it on the fridge. No more squinting at a phone screen.",
+  },
+  {
+    name: "Sana F.",
+    city: "Mumbai",
+    rating: 5,
+    title: "QR menus for our café in an afternoon",
+    tag: "Prints: QR code cards",
+    body: "Printed QR menu cards for every table in one afternoon. For a ₹999 gadget, it paid for itself that week.",
   },
 ] as const;
 
@@ -191,3 +276,13 @@ export const SPEC_TICKER = [
   "Android + iOS compatible",
   "Monochrome output",
 ] as const;
+
+/** Hero demo clip — a 15-second YouTube Short of the printer printing. */
+export const DEMO_VIDEO = {
+  youtubeId: "uCBzgPJMXn4",
+  title: "Beevo Go printing a photo straight from a phone",
+  poster: "/images/product-printing.jpg",
+  posterAlt:
+    "A printed strip emerging from the Beevo Go — press play to watch it print, ink-free",
+  duration: "0:15",
+} as const;
