@@ -1,0 +1,491 @@
+import Image from "next/image";
+import Link from "next/link";
+import {
+  BatteryCharging,
+  Bluetooth,
+  Boxes,
+  FlameKindling,
+  HandCoins,
+  Image as ImageIcon,
+  ListChecks,
+  Lock,
+  Mail,
+  NotebookPen,
+  PackageSearch,
+  Printer,
+  QrCode,
+  Ruler,
+  ShieldCheck,
+  Tag,
+  Undo2,
+  Weight,
+  Zap,
+  type LucideIcon,
+} from "lucide-react";
+import { Accordion } from "@/components/accordion";
+import { BuyBox } from "@/components/buy-box";
+import { ProductGallery } from "@/components/product-gallery";
+import { StickyBuyBar } from "@/components/sticky-buy-bar";
+import {
+  Badge,
+  Card,
+  Container,
+  Eyebrow,
+  Section,
+  SectionTitle,
+  buttonClasses,
+} from "@/components/ui";
+import { product, site } from "@/lib/config";
+import {
+  FAQS,
+  HERO,
+  HOW_IT_WORKS,
+  IN_THE_BOX,
+  SPECS,
+  SPEC_TICKER,
+  USE_CASES,
+  VALUE_PROPS,
+} from "@/lib/content";
+import { formatINR } from "@/lib/format";
+
+const VALUE_ICONS: Record<string, LucideIcon> = {
+  NotebookPen,
+  Tag,
+  ListChecks,
+  QrCode,
+  Image: ImageIcon,
+  FlameKindling,
+};
+
+const productLd = {
+  "@context": "https://schema.org",
+  "@type": "Product",
+  name: product.name,
+  sku: product.sku,
+  description:
+    "Palm-size Bluetooth mini thermal printer for ink-free black-and-white printing of notes, labels, lists and QR codes from Android and iOS smartphones. ≈200 DPI, ≈160 g, rechargeable ≈1200 mAh battery.",
+  image: product.images.map((img) => `${site.url}${img.src}`),
+  brand: { "@type": "Brand", name: site.name },
+  material: "ABS plastic",
+  offers: {
+    "@type": "Offer",
+    url: site.url,
+    priceCurrency: "INR",
+    price: "1499",
+    availability: "https://schema.org/InStock",
+    itemCondition: "https://schema.org/NewCondition",
+  },
+};
+
+const faqLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQS.map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
+
+export default function HomePage() {
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqLd) }}
+      />
+
+      {/* ============ HERO ============ */}
+      <section className="relative overflow-hidden">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-40 -top-40 size-[480px] rounded-full bg-accent-soft blur-3xl"
+        />
+        <Container className="relative grid items-center gap-10 pb-12 pt-8 md:pt-14 lg:grid-cols-[1.05fr_1fr] lg:gap-14">
+          <div className="order-2 min-w-0 space-y-6 lg:order-1">
+            <Eyebrow>{HERO.eyebrow}</Eyebrow>
+            <h1 className="font-display text-[2.35rem] leading-[1.06] font-semibold tracking-tight text-ink sm:text-5xl lg:text-[3.4rem]">
+              Print anything from your phone.{" "}
+              <span className="text-accent">No ink, ever.</span>
+            </h1>
+            <p className="max-w-lg text-[15.5px] leading-relaxed text-ink-soft md:text-lg">
+              {HERO.subtitle}
+            </p>
+            <BuyBox />
+          </div>
+          <div className="order-1 min-w-0 lg:order-2">
+            <div className="relative">
+              <ProductGallery images={product.images} />
+              <Badge
+                tone="dark"
+                className="absolute -top-2.5 left-4 rotate-[-4deg] px-4 py-1.5 text-sm shadow-pop"
+              >
+                <Printer className="size-3.5" aria-hidden />
+                Pocket-size
+              </Badge>
+            </div>
+          </div>
+        </Container>
+
+        {/* Spec ticker */}
+        <div className="marquee border-y border-dashed border-sandline bg-white/60 py-3.5">
+          <div className="marquee-track gap-0">
+            {[0, 1].map((dup) => (
+              <div
+                key={dup}
+                aria-hidden={dup === 1}
+                className="flex shrink-0 items-center"
+              >
+                {SPEC_TICKER.map((item) => (
+                  <span
+                    key={item}
+                    className="flex items-center gap-3 whitespace-nowrap px-4 text-[13px] font-bold text-ink-soft"
+                  >
+                    {item}
+                    <span className="size-1.5 rounded-full bg-accent" aria-hidden />
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============ VALUE PROPS ============ */}
+      <Section id="features">
+        <Container>
+          <div className="max-w-2xl space-y-3">
+            <Eyebrow>Why you'll reach for it daily</Eyebrow>
+            <SectionTitle>
+              One little printer, a hundred little prints
+            </SectionTitle>
+            <p className="text-[15px] leading-relaxed text-ink-soft">
+              Beevo Go turns the digital stuff on your phone into small, useful
+              paper. Here&apos;s what people actually use it for.
+            </p>
+          </div>
+          <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {VALUE_PROPS.map((prop) => {
+              const Icon = VALUE_ICONS[prop.icon];
+              return (
+                <Card key={prop.title} className="p-6 transition-shadow hover:shadow-pop">
+                  <span className="mb-4 inline-flex rounded-2xl bg-accent-soft p-3 text-accent-deep">
+                    <Icon className="size-5.5" aria-hidden />
+                  </span>
+                  <h3 className="text-[17px] font-extrabold text-ink">
+                    {prop.title}
+                  </h3>
+                  <p className="mt-1.5 text-[14.5px] leading-relaxed text-ink-soft">
+                    {prop.body}
+                  </p>
+                </Card>
+              );
+            })}
+          </div>
+        </Container>
+      </Section>
+
+      {/* ============ HOW IT WORKS ============ */}
+      <Section id="how-it-works" className="bg-cream/70">
+        <Container>
+          <div className="max-w-2xl space-y-3">
+            <Eyebrow>Up and printing in a minute</Eyebrow>
+            <SectionTitle>How it works</SectionTitle>
+          </div>
+          <ol className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+            {HOW_IT_WORKS.map((step) => (
+              <li key={step.step} className="relative">
+                <div className="flex items-center gap-3">
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-ink font-display text-lg font-bold text-paper">
+                    {step.step}
+                  </span>
+                  <span
+                    aria-hidden
+                    className="hidden h-px flex-1 border-t border-dashed border-ink-faint/50 lg:block"
+                  />
+                </div>
+                <h3 className="mt-4 text-[16px] font-extrabold text-ink">
+                  {step.title}
+                </h3>
+                <p className="mt-1.5 text-[14px] leading-relaxed text-ink-soft">
+                  {step.body}
+                </p>
+              </li>
+            ))}
+          </ol>
+        </Container>
+      </Section>
+
+      {/* ============ USE CASES ============ */}
+      <Section>
+        <Container>
+          <div className="max-w-2xl space-y-3">
+            <Eyebrow>Made for your everyday</Eyebrow>
+            <SectionTitle>Where Beevo Go fits right in</SectionTitle>
+          </div>
+          <div className="mt-10 space-y-12">
+            {USE_CASES.map((use, i) => (
+              <article
+                key={use.tag}
+                className="grid items-center gap-7 md:grid-cols-2 md:gap-12"
+              >
+                <div
+                  className={
+                    i % 2 === 1 ? "relative md:order-2" : "relative"
+                  }
+                >
+                  <div className="relative aspect-square overflow-hidden rounded-3xl border border-sandline shadow-lift">
+                    <Image
+                      src={use.image}
+                      alt={use.alt}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 540px"
+                      className="object-cover"
+                      loading={i === 0 ? "eager" : "lazy"}
+                    />
+                  </div>
+                </div>
+                <div className={i % 2 === 1 ? "md:order-1" : ""}>
+                  <Badge tone="accent">{use.tag}</Badge>
+                  <h3 className="mt-3.5 font-display text-[1.55rem] font-semibold leading-snug tracking-tight text-ink md:text-3xl">
+                    {use.title}
+                  </h3>
+                  <p className="mt-3 max-w-md text-[15px] leading-relaxed text-ink-soft">
+                    {use.body}
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </Container>
+      </Section>
+
+      {/* ============ PRICE / RECEIPT ============ */}
+      <Section className="bg-ink py-16 text-paper md:py-24">
+        <Container className="grid items-center gap-12 lg:grid-cols-2">
+          <div className="space-y-5">
+            <Eyebrow className="text-paper/60 [&>span]:bg-accent">
+              One product. One honest price.
+            </Eyebrow>
+            <h2 className="font-display text-[1.9rem] font-semibold leading-tight tracking-tight md:text-4xl">
+              Everything you need to start printing, for{" "}
+              {formatINR(product.priceInPaise)}.
+            </h2>
+            <p className="max-w-md text-[15px] leading-relaxed text-paper/70">
+              No fake MRPs, no countdown timers, no hidden charges at checkout.
+              Just {product.shortName}, a starter paper roll and free doorstep
+              delivery anywhere in India — with Cash on Delivery.
+            </p>
+            <ul className="space-y-2.5 pt-1 text-sm font-bold text-paper/85">
+              {[
+                "Free shipping to every serviceable pincode",
+                "Pay online securely, or by cash / UPI on delivery",
+                "7-day replacement promise for defects",
+              ].map((line) => (
+                <li key={line} className="flex items-center gap-2.5">
+                  <ShieldCheck className="size-4.5 shrink-0 text-accent" aria-hidden />
+                  {line}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="mx-auto w-full max-w-md">
+            <div className="fade-up rounded-t-2xl bg-white px-7 pb-8 pt-7 font-mono text-ink shadow-pop">
+              <p className="text-center text-xs font-bold uppercase tracking-[0.22em] text-ink-faint">
+                Beevo · Order preview
+              </p>
+              <div className="dashed-rule my-5" />
+              <div className="space-y-2.5 text-[15px]">
+                <p className="flex justify-between gap-4">
+                  <span>
+                    {product.shortName} × 1<span className="block text-xs text-ink-faint">Ink-free pocket printer</span>
+                  </span>
+                  <span className="font-bold tabular-nums">
+                    {formatINR(product.priceInPaise)}
+                  </span>
+                </p>
+                <p className="flex justify-between gap-4">
+                  <span>Shipping</span>
+                  <span className="font-bold text-leaf">FREE</span>
+                </p>
+                <p className="flex justify-between gap-4 text-[13px] text-ink-faint">
+                  <span>GST</span>
+                  <span>Included in price</span>
+                </p>
+              </div>
+              <div className="dashed-rule my-5" />
+              <p className="flex items-baseline justify-between">
+                <span className="text-sm font-bold uppercase tracking-wider text-ink-soft">
+                  Total
+                </span>
+                <span className="font-display text-3xl font-bold tabular-nums">
+                  {formatINR(product.priceInPaise)}
+                </span>
+              </p>
+              <Link
+                href="/checkout"
+                className={buttonClasses({ className: "mt-6 w-full", size: "lg" })}
+              >
+                <Zap className="size-4.5" aria-hidden />
+                Buy now — {formatINR(product.priceInPaise)}
+              </Link>
+              <p className="mt-3.5 flex items-center justify-center gap-1.5 text-center text-[12px] font-semibold text-ink-faint">
+                <Lock className="size-3.5" aria-hidden />
+                Secure checkout · COD available
+              </p>
+            </div>
+            <div className="receipt-edge" aria-hidden />
+          </div>
+        </Container>
+      </Section>
+
+      {/* ============ SPECS + IN THE BOX ============ */}
+      <Section id="specs">
+        <Container className="grid gap-11 lg:grid-cols-2 lg:gap-16">
+          <div>
+            <Eyebrow>Verified specifications</Eyebrow>
+            <SectionTitle className="mt-3">The specs, straight up</SectionTitle>
+            <p className="mt-3 max-w-md text-[14.5px] text-ink-soft">
+              Every number below comes from the manufacturer&apos;s published
+              specifications. Figures marked ≈ are approximate.
+            </p>
+            <dl className="mt-7 overflow-hidden rounded-2xl border border-sandline bg-card">
+              {SPECS.map((spec) => (
+                <div
+                  key={spec.label}
+                  className="flex items-baseline justify-between gap-6 border-b border-sandline/60 px-5 py-3.5 last:border-0 odd:bg-cream/40"
+                >
+                  <dt className="shrink-0 text-[13.5px] font-bold text-ink-faint">
+                    {spec.label}
+                  </dt>
+                  <dd className="text-right text-[14px] font-bold text-ink">
+                    {spec.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <div id="box">
+            <Eyebrow>What&apos;s in the box</Eyebrow>
+            <SectionTitle className="mt-3">Open it up</SectionTitle>
+            <div className="relative mt-7 aspect-square overflow-hidden rounded-3xl border border-sandline shadow-lift">
+              <Image
+                src="/images/box-contents.jpg"
+                alt="Beevo Go box contents: the printer, USB charging cable, a thermal paper roll and the quick-start guide"
+                fill
+                sizes="(max-width: 768px) 100vw, 540px"
+                className="object-cover"
+                loading="lazy"
+              />
+            </div>
+            <Card className="mt-5 p-6">
+              <ul className="space-y-2.5">
+                {IN_THE_BOX.map((item) => (
+                  <li
+                    key={item}
+                    className="flex items-center gap-3 text-[15px] font-bold text-ink"
+                  >
+                    <Boxes className="size-4.5 shrink-0 text-accent" aria-hidden />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 border-t border-dashed border-sandline pt-3.5 text-[12.5px] leading-relaxed text-ink-faint">
+                Box contents are as supplied by the manufacturer for this batch.
+                If your package ever differs from this list, contact support and
+                we&apos;ll make it right.
+              </p>
+            </Card>
+          </div>
+        </Container>
+      </Section>
+
+      {/* ============ TRUST ============ */}
+      <Section className="bg-cream/70">
+        <Container>
+          <div className="max-w-2xl space-y-3">
+            <Eyebrow>Shop with confidence</Eyebrow>
+            <SectionTitle>Boring reliability, by design</SectionTitle>
+          </div>
+          <div className="mt-9 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                icon: Lock,
+                title: "Secure checkout",
+                body: "Payments are processed by PCI-DSS compliant gateways; we never see or store your card details.",
+              },
+              {
+                icon: PackageSearch,
+                title: "Track every step",
+                body: "Every order gets a tracking timeline from confirmed to delivered, plus email updates at each stage.",
+              },
+              {
+                icon: Undo2,
+                title: "7-day replacement",
+                body: "Damaged, defective or not-as-described? We'll replace it or refund you within 7 days of delivery.",
+              },
+              {
+                icon: Mail,
+                title: "Real human support",
+                body: `Write to ${site.supportEmail} — a person replies within one business day, not a bot loop.`,
+              },
+            ].map((item) => (
+              <Card key={item.title} className="p-6">
+                <item.icon className="size-6 text-accent-deep" aria-hidden />
+                <h3 className="mt-3.5 text-[16px] font-extrabold text-ink">
+                  {item.title}
+                </h3>
+                <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-soft">
+                  {item.body}
+                </p>
+              </Card>
+            ))}
+          </div>
+        </Container>
+      </Section>
+
+      {/* ============ FAQ PREVIEW ============ */}
+      <Section>
+        <Container className="grid gap-9 lg:grid-cols-[0.9fr_1.4fr]">
+          <div className="space-y-3">
+            <Eyebrow>Good questions</Eyebrow>
+            <SectionTitle>Everything people ask before buying</SectionTitle>
+            <p className="text-[14.5px] leading-relaxed text-ink-soft">
+              Honest answers about printing, compatibility, charging, delivery
+              and returns.{" "}
+              <Link
+                href="/faq"
+                className="font-bold text-accent-deep underline-offset-4 hover:underline"
+              >
+                See all FAQs →
+              </Link>
+            </p>
+            <div className="hidden gap-3 pt-3 lg:flex">
+              <Badge tone="neutral">
+                <Bluetooth className="size-3.5" aria-hidden /> Bluetooth
+              </Badge>
+              <Badge tone="neutral">
+                <BatteryCharging className="size-3.5" aria-hidden /> Rechargeable
+              </Badge>
+              <Badge tone="neutral">
+                <Weight className="size-3.5" aria-hidden /> ≈160 g
+              </Badge>
+              <Badge tone="neutral">
+                <Ruler className="size-3.5" aria-hidden /> 57 mm paper
+              </Badge>
+            </div>
+          </div>
+          <Accordion items={FAQS.slice(0, 6)} />
+        </Container>
+      </Section>
+
+      <StickyBuyBar />
+    </>
+  );
+}

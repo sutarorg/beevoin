@@ -1,0 +1,110 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import {
+  HandCoins,
+  Minus,
+  Plus,
+  ShieldCheck,
+  ShoppingBag,
+  Truck,
+  Undo2,
+  Zap,
+} from "lucide-react";
+import { product } from "@/lib/config";
+import { formatINR } from "@/lib/format";
+import { buttonClasses, TrustChip } from "./ui";
+import { useCart } from "./cart-store";
+
+export function BuyBox() {
+  const router = useRouter();
+  const { add, setQty } = useCart();
+  const [qty, setLocalQty] = useState(1);
+
+  const buyNow = () => {
+    setQty(qty);
+    router.push("/checkout");
+  };
+
+  return (
+    <div className="min-w-0 space-y-5" data-testid="buy-box">
+      <div className="flex flex-wrap items-end gap-x-3 gap-y-1">
+        <p className="font-display text-[2.1rem] font-bold leading-none tracking-tight text-ink">
+          {formatINR(product.priceInPaise)}
+        </p>
+        <p className="pb-1 text-sm font-semibold text-ink-faint">
+          Inclusive of all taxes · Free shipping
+        </p>
+      </div>
+
+      <div className="flex items-center gap-3">
+        <span className="text-sm font-bold text-ink-soft" id="qty-label">
+          Qty
+        </span>
+        <div
+          className="inline-flex items-center rounded-full border-[1.5px] border-sandline bg-white"
+          role="group"
+          aria-labelledby="qty-label"
+        >
+          <button
+            type="button"
+            onClick={() => setLocalQty((q) => Math.max(1, q - 1))}
+            disabled={qty <= 1}
+            className="p-3 text-ink transition disabled:opacity-30"
+            aria-label="Decrease quantity"
+          >
+            <Minus className="size-4" aria-hidden />
+          </button>
+          <span
+            className="w-8 text-center font-mono text-base font-bold tabular-nums"
+            aria-live="polite"
+          >
+            {qty}
+          </span>
+          <button
+            type="button"
+            onClick={() =>
+              setLocalQty((q) => Math.min(product.maxPerOrder, q + 1))
+            }
+            disabled={qty >= product.maxPerOrder}
+            className="p-3 text-ink transition disabled:opacity-30"
+            aria-label="Increase quantity"
+          >
+            <Plus className="size-4" aria-hidden />
+          </button>
+        </div>
+        <span className="text-xs font-semibold text-ink-faint">
+          Max {product.maxPerOrder} per order
+        </span>
+      </div>
+
+      {/* The sticky mobile bar appears once this block scrolls out of view */}
+      <div id="hero-cta" className="grid gap-2.5 sm:grid-cols-2">
+        <button
+          type="button"
+          onClick={buyNow}
+          className={buttonClasses({ size: "lg" })}
+        >
+          <Zap className="size-4.5" aria-hidden />
+          Buy now — {formatINR(product.priceInPaise)}
+        </button>
+        <button
+          type="button"
+          onClick={() => add(qty)}
+          className={buttonClasses({ variant: "secondary", size: "lg" })}
+        >
+          <ShoppingBag className="size-4.5" aria-hidden />
+          Add to cart
+        </button>
+      </div>
+
+      <ul className="flex flex-wrap gap-x-5 gap-y-2 pt-1">
+        <TrustChip icon={<Truck />}>Free shipping</TrustChip>
+        <TrustChip icon={<HandCoins />}>COD available</TrustChip>
+        <TrustChip icon={<Undo2 />}>7-day replacement</TrustChip>
+        <TrustChip icon={<ShieldCheck />}>Secure checkout</TrustChip>
+      </ul>
+    </div>
+  );
+}
