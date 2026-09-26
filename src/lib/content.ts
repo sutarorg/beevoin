@@ -6,10 +6,36 @@ import { policies, productDefaults } from "./config";
 
 export const HERO = {
   eyebrow: "Beevo Go · Pocket Thermal Printer",
-  title: "Print anything from your phone. No ink, ever.",
+  title: "Print anything from your phone.",
+  titleAccent: "No ink, ever.",
   subtitle:
-    "A palm-size Bluetooth thermal printer for notes, labels, to-do lists, QR codes and little everyday prints. Charges over USB, fits in your pocket, and prints crisp black-and-white in seconds.",
-};
+    "A palm-size Bluetooth printer for notes, labels, to-dos and QR codes. Charge it, pair it, print in seconds — the only consumable is paper.",
+  /** Verified at-a-glance facts, shown as chips under the headline. */
+  keyFacts: [
+    { icon: "FlameKindling", label: "No ink or toner" },
+    { icon: "Bluetooth", label: "Android & iOS" },
+    { icon: "Weight", label: "≈160 g · pocket-size" },
+    { icon: "BatteryCharging", label: "USB rechargeable" },
+  ],
+} as const;
+
+/**
+ * Copy for the two in-flow purchase bands (src/components/buy-banner.tsx).
+ * The mid-page band keeps the buy action near the story sections; the final
+ * band answers "why buy now" right before the page ends.
+ */
+export const BUY_BANDS = {
+  mid: {
+    eyebrow: "Buy it today",
+    title: "One small printer, daily little wins.",
+    note: "Ink-free thermal printing, Bluetooth pairing and a starter paper roll in the box — everything you need to print within minutes of opening it.",
+  },
+  final: {
+    eyebrow: "Why wait for the idea to fade?",
+    title: "Get your Beevo Go and print your first note this week.",
+    note: "Included: printer, starter paper roll, USB cable and quick-start guide. Dispatched in 24–48 hours with free shipping — pay online or choose Cash on Delivery.",
+  },
+} as const;
 
 export const VALUE_PROPS = [
   {

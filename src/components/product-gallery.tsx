@@ -7,7 +7,18 @@ import { cn } from "@/lib/cn";
 
 export type GalleryImage = { src: string; alt: string };
 
-export function ProductGallery({ images }: { images: readonly GalleryImage[] }) {
+/**
+ * `compactOnMobile` shortens the mobile aspect ratio so headline, price and
+ * the purchase action fit into more of the first mobile viewport instead of
+ * being pushed below the fold by a full square image. Desktop stays square.
+ */
+export function ProductGallery({
+  images,
+  compactOnMobile = false,
+}: {
+  images: readonly GalleryImage[];
+  compactOnMobile?: boolean;
+}) {
   const [index, setIndex] = useState(0);
   const [zoomOpen, setZoomOpen] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -42,7 +53,10 @@ export function ProductGallery({ images }: { images: readonly GalleryImage[] }) 
   return (
     <div className="min-w-0 space-y-3">
       <div
-        className="group relative aspect-square overflow-hidden rounded-3xl border border-sandline bg-white"
+        className={cn(
+          "group relative overflow-hidden rounded-3xl border border-sandline bg-white",
+          compactOnMobile ? "aspect-[4/3] sm:aspect-square" : "aspect-square",
+        )}
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >

@@ -1,5 +1,12 @@
 @import "tailwindcss";
 
+/* Self-hosted variable fonts (bundled from @fontsource-variable via npm —
+   no third-party font request at runtime and no build-time CDN fetch).
+   Fraunces "full" includes the optical-size axis, so large headlines get the
+   display cut automatically; Inter carries the body weight range. */
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/fraunces/full.css";
+
 @theme {
   /* Beevo design tokens — "paper, ink & vermillion" */
   --color-paper: #faf7f0;
@@ -19,10 +26,11 @@
   --color-haldi: #8a5c00;
   --color-haldi-soft: #fdf3dc;
 
-  /* System font stacks keep builds self-contained and avoid a render-blocking
-     third-party font request on first visits. */
-  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-display: Georgia, Cambria, "Times New Roman", serif;
+  /* Self-hosted variable fonts (npm @fontsource-variable) with system
+     fallbacks: no render-blocking third-party font request, but real light
+     weights (headlines run 300–400; body stays 400–600 for readability). */
+  --font-sans: "Inter Variable", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-display: "Fraunces Variable", Georgia, Cambria, "Times New Roman", serif;
 
   --shadow-lift: 0 1px 2px rgb(29 25 18 / 0.05), 0 8px 24px -12px rgb(29 25 18 / 0.18);
   --shadow-pop: 0 2px 6px rgb(29 25 18 / 0.06), 0 20px 44px -16px rgb(29 25 18 / 0.28);
@@ -39,6 +47,20 @@ body {
      `clip` (unlike `hidden`) does not create a scroll container, so
      position: sticky keeps working in the header and sticky buy bar. */
   overflow-x: clip;
+}
+
+/* Fraunces' optical-size axis only engages when asked explicitly. */
+.font-display {
+  font-optical-sizing: auto;
+}
+
+/* While the mobile sticky buy bar is on screen it overlays the bottom of the
+   viewport; pad the page end so footer content is never hidden beneath it.
+   The persistent bar is deliberately kept mobile-only (below lg). */
+@media (max-width: 1023.98px) {
+  body.has-buy-bar footer {
+    padding-bottom: 84px;
+  }
 }
 
 /* Horizontally scrollable strips without a visible scrollbar */
@@ -92,6 +114,16 @@ body {
   border-radius: 999px;
   font-weight: 700;
   font-size: 14px;
+}
+
+/* Stronger glow for the dominant purchase buttons. Written unlayered on
+   purpose, so it reliably wins over the primary variant's default shadow in
+   Tailwind's utilities layer. */
+.btn-glow {
+  box-shadow: 0 12px 30px -8px rgb(228 82 14 / 0.62);
+}
+.btn-glow:hover {
+  box-shadow: 0 14px 36px -8px rgb(228 82 14 / 0.72);
 }
 
 /* ---- Receipt / print motif ---- */

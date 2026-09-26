@@ -3,13 +3,16 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Zap } from "lucide-react";
 import { formatINR } from "@/lib/format";
 import { useCart } from "./cart-store";
 
 /**
- * Mobile sticky purchase bar — appears only after the hero buy-box scrolls
- * out of view, and hides when the buy-box (or footer) is visible so it never
- * overlaps primary actions.
+ * Persistent mobile purchase bar — Baymard's mobile research is clear that
+ * the primary action should stay reachable without hunting or scrolling back.
+ * It appears once the hero buy-box scrolls out of view, carries the complete
+ * micro-proposition (product, price, trust) and hides while the buy-box is
+ * visible so it never stacks on top of the primary action.
  */
 export function StickyBuyBar() {
   const router = useRouter();
@@ -29,6 +32,13 @@ export function StickyBuyBar() {
     return () => observer.disconnect();
   }, []);
 
+  // The fixed bar overlays the bottom of the viewport; a body class lets CSS
+  // pad the page end so footer content is never trapped beneath it.
+  useEffect(() => {
+    document.body.classList.toggle("has-buy-bar", visible);
+    return () => document.body.classList.remove("has-buy-bar");
+  }, [visible]);
+
   const buyNow = () => {
     setQty(1);
     router.push("/checkout");
@@ -44,13 +54,13 @@ export function StickyBuyBar() {
       }`}
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
-      <div className="flex items-center gap-3 px-4 py-2.5">
-        <span className="relative size-11 shrink-0 overflow-hidden rounded-xl border border-sandline">
+      <div className="flex items-center gap-3 px-4 py-3">
+        <span className="relative size-12 shrink-0 overflow-hidden rounded-xl border border-sandline">
           <Image
             src={product.images[0]?.src ?? "/images/product-1.jpg"}
             alt=""
             fill
-            sizes="44px"
+            sizes="48px"
             className="object-cover"
           />
         </span>
@@ -61,8 +71,8 @@ export function StickyBuyBar() {
           <p className="font-mono text-[15px] font-bold text-ink">
             {formatINR(product.priceInPaise)} online
             {product.shippingInPaise === 0 ? (
-              <span className="ml-1.5 font-sans text-[11px] font-semibold text-leaf">
-                Free shipping
+              <span className="ml-1.5 block font-sans text-[11px] font-semibold text-leaf sm:inline">
+                Free shipping · COD available
               </span>
             ) : null}
           </p>
@@ -71,9 +81,10 @@ export function StickyBuyBar() {
           type="button"
           onClick={buyNow}
           tabIndex={visible ? 0 : -1}
-          className="min-h-11 shrink-0 rounded-full bg-accent px-6 text-[15px] font-bold text-white shadow-[0_6px_18px_-6px_rgb(228_82_14/0.55)] transition active:scale-[0.98] hover:bg-accent-deep"
+          className="inline-flex min-h-12 shrink-0 items-center gap-1.5 rounded-full bg-accent px-5 text-[15px] font-bold text-white shadow-[0_6px_18px_-6px_rgb(228_82_14/0.55)] transition active:scale-[0.98] hover:bg-accent-deep"
         >
-          Buy now
+          <Zap className="size-4" aria-hidden />
+          Buy · {formatINR(product.priceInPaise)}
         </button>
       </div>
     </div>

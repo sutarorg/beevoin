@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { CircleHelp, Menu, PackageSearch, ShoppingBag, X } from "lucide-react";
+import { Menu, PackageSearch, ShoppingBag, X, Zap } from "lucide-react";
+import { formatINR } from "@/lib/format";
 import { useCart } from "./cart-store";
 import { cn } from "@/lib/cn";
 
@@ -33,9 +34,10 @@ const NAV_LINKS = [
 ];
 
 export function SiteHeader() {
-  const { qty, hydrated } = useCart();
+  const { qty, hydrated, product, setQty } = useCart();
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
 
   // Close the mobile menu whenever the route changes. The router is an
   // external system; there is no render-time way to observe a navigation.
@@ -43,6 +45,11 @@ export function SiteHeader() {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reacting to a navigation
     setOpen(false);
   }, [pathname]);
+
+  const quickBuy = () => {
+    setQty(1);
+    router.push("/checkout");
+  };
 
   return (
     <header className="sticky top-0 z-50 border-b border-sandline/70 bg-paper/90 backdrop-blur-md">
@@ -78,6 +85,22 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-1.5">
+          {/* Persistent quick-buy: the purchase action is always one tap away,
+              in the header of every storefront page — not buried mid-page. */}
+          {product.purchasable ? (
+            <button
+              type="button"
+              onClick={quickBuy}
+              aria-label={`Buy ${product.shortName} now for ${formatINR(product.priceInPaise)}`}
+              className="inline-flex min-h-10 items-center gap-1.5 rounded-full bg-accent px-4 text-sm font-extrabold text-white shadow-[0_6px_18px_-6px_rgb(228_82_14/0.55)] transition active:scale-[0.97] hover:bg-accent-deep"
+            >
+              <Zap className="size-4" aria-hidden />
+              <span className="hidden min-[420px]:inline">
+                Buy · {formatINR(product.priceInPaise)}
+              </span>
+              <span className="min-[420px]:hidden">Buy</span>
+            </button>
+          ) : null}
           <Link
             href="/track"
             className="hidden items-center gap-1.5 rounded-full px-3 py-2 text-sm font-bold text-ink-soft transition-colors hover:bg-cream hover:text-ink sm:inline-flex"
@@ -85,13 +108,6 @@ export function SiteHeader() {
           >
             <PackageSearch className="size-4.5" aria-hidden />
             <span className="hidden md:inline">Track order</span>
-          </Link>
-          <Link
-            href="/faq"
-            className="inline-flex rounded-full p-2.5 text-ink-soft transition-colors hover:bg-cream hover:text-ink sm:hidden"
-            aria-label="Help and FAQ"
-          >
-            <CircleHelp className="size-5" aria-hidden />
           </Link>
           <Link
             href="/cart"

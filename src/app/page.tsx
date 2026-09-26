@@ -18,12 +18,14 @@ import {
   Ruler,
   ShieldCheck,
   Tag,
+  Truck,
   Undo2,
   Weight,
   Zap,
   type LucideIcon,
 } from "lucide-react";
 import { Accordion } from "@/components/accordion";
+import { BuyBanner } from "@/components/buy-banner";
 import { BuyBox } from "@/components/buy-box";
 import { ProductGallery } from "@/components/product-gallery";
 import { StickyBuyBar } from "@/components/sticky-buy-bar";
@@ -34,9 +36,10 @@ import {
   Eyebrow,
   Section,
   SectionTitle,
+  TrustChip,
   buttonClasses,
 } from "@/components/ui";
-import { site } from "@/lib/config";
+import { policies, site } from "@/lib/config";
 import { guidesByFreshness } from "@/lib/guides";
 import {
   breadcrumbLd,
@@ -47,11 +50,9 @@ import {
   type Crumb,
 } from "@/lib/seo";
 import { getStorefrontProduct } from "@/lib/services/products";
+import { UNAVAILABLE_PRODUCT } from "@/lib/product-types";
 import {
-  UNAVAILABLE_PRODUCT,
-  type StorefrontProduct,
-} from "@/lib/product-types";
-import {
+  BUY_BANDS,
   FAQS,
   HERO,
   HOW_IT_WORKS,
@@ -70,6 +71,13 @@ const VALUE_ICONS: Record<string, LucideIcon> = {
   QrCode,
   Image: ImageIcon,
   FlameKindling,
+};
+
+const FACT_ICONS: Record<string, LucideIcon> = {
+  FlameKindling,
+  Bluetooth,
+  Weight,
+  BatteryCharging,
 };
 
 const homeCrumbs: Crumb[] = [{ name: "Home", path: "/" }];
@@ -123,6 +131,14 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
+/**
+ * The page is built around a purchase rhythm rather than a brochure rhythm:
+ *   What is it? (hero, with price + buy action + trust)
+ *   Why do I need it? (value props, use cases)
+ *   How does it work? / What exactly do I get? (steps, specs, box)
+ *   How much is it? (receipt) — trust sits beside the decision
+ *   Why should I buy now? (mid and closing purchase bands)
+ */
 export default async function HomePage() {
   // Cached read of the single authoritative product row.
   const product = (await getStorefrontProduct()) ?? UNAVAILABLE_PRODUCT;
@@ -149,27 +165,44 @@ export default async function HomePage() {
         dangerouslySetInnerHTML={{ __html: jsonLd(ld) }}
       />
 
-      {/* ============ HERO ============ */}
+      {/* ============ HERO — what it is + price + buy + trust ============ */}
       <section className="relative overflow-hidden">
         <div
           aria-hidden
           className="pointer-events-none absolute -right-40 -top-40 size-[480px] rounded-full bg-accent-soft blur-3xl"
         />
-        <Container className="relative grid items-center gap-10 pb-12 pt-8 md:pt-14 lg:grid-cols-[1.05fr_1fr] lg:gap-14">
-          <div className="order-2 min-w-0 space-y-6 lg:order-1">
+        <Container className="relative grid items-center gap-8 pb-12 pt-6 md:pt-14 lg:grid-cols-[1.05fr_1fr] lg:gap-14">
+          <div className="order-2 min-w-0 space-y-5 lg:order-1">
             <Eyebrow>{HERO.eyebrow}</Eyebrow>
-            <h1 className="font-display text-[2.35rem] leading-[1.06] font-semibold tracking-tight text-ink sm:text-5xl lg:text-[3.4rem]">
-              Print anything from your phone.{" "}
-              <span className="text-accent">No ink, ever.</span>
+            <h1 className="font-display text-[2.35rem] leading-[1.06] font-light tracking-tight text-ink sm:text-5xl lg:text-[3.4rem]">
+              {HERO.title}{" "}
+              <span className="font-normal text-accent">{HERO.titleAccent}</span>
             </h1>
             <p className="max-w-lg text-[15.5px] leading-relaxed text-ink-soft md:text-lg">
               {HERO.subtitle}
             </p>
-            <BuyBox />
+            {/* At-a-glance product facts — scannable before any reading */}
+            <ul className="flex flex-wrap gap-2">
+              {HERO.keyFacts.map((fact) => {
+                const Icon = FACT_ICONS[fact.icon];
+                return (
+                  <li
+                    key={fact.label}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-sandline bg-white px-3 py-1.5 text-[12.5px] font-semibold text-ink-soft"
+                  >
+                    <Icon className="size-3.5 text-accent-deep" aria-hidden />
+                    {fact.label}
+                  </li>
+                );
+              })}
+            </ul>
+            <BuyBox
+              promiseLine={`Ships in ${policies.dispatchWindow}. Delivered in ${policies.deliveryEstimate}.`}
+            />
           </div>
           <div className="order-1 min-w-0 lg:order-2">
             <div className="relative">
-              <ProductGallery images={product.images} />
+              <ProductGallery images={product.images} compactOnMobile />
               <Badge
                 tone="dark"
                 className="absolute -top-2.5 left-4 rotate-[-4deg] px-4 py-1.5 text-sm shadow-pop"
@@ -193,7 +226,7 @@ export default async function HomePage() {
                 {SPEC_TICKER.map((item) => (
                   <span
                     key={item}
-                    className="flex items-center gap-3 whitespace-nowrap px-4 text-[13px] font-bold text-ink-soft"
+                    className="flex items-center gap-3 whitespace-nowrap px-4 text-[13px] font-semibold text-ink-soft"
                   >
                     {item}
                     <span className="size-1.5 rounded-full bg-accent" aria-hidden />
@@ -205,7 +238,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ============ VALUE PROPS ============ */}
+      {/* ============ VALUE PROPS — why you'll use it ============ */}
       <Section id="features">
         <Container>
           <div className="max-w-2xl space-y-3">
@@ -222,11 +255,14 @@ export default async function HomePage() {
             {VALUE_PROPS.map((prop) => {
               const Icon = VALUE_ICONS[prop.icon];
               return (
-                <Card key={prop.title} className="p-6 transition-shadow hover:shadow-pop">
-                  <span className="mb-4 inline-flex rounded-2xl bg-accent-soft p-3 text-accent-deep">
-                    <Icon className="size-5.5" aria-hidden />
+                <Card
+                  key={prop.title}
+                  className="p-5 transition-shadow hover:shadow-pop md:p-6"
+                >
+                  <span className="mb-4 inline-flex rounded-2xl bg-accent-soft p-2.5 text-accent-deep">
+                    <Icon className="size-5" aria-hidden />
                   </span>
-                  <h3 className="text-[17px] font-extrabold text-ink">
+                  <h3 className="text-[17px] font-bold text-ink">
                     {prop.title}
                   </h3>
                   <p className="mt-1.5 text-[14.5px] leading-relaxed text-ink-soft">
@@ -246,11 +282,11 @@ export default async function HomePage() {
             <Eyebrow>Up and printing in a minute</Eyebrow>
             <SectionTitle>How it works</SectionTitle>
           </div>
-          <ol className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+          <ol className="mt-9 grid gap-7 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
             {HOW_IT_WORKS.map((step) => (
-              <li key={step.step} className="relative">
-                <div className="flex items-center gap-3">
-                  <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-ink font-display text-lg font-bold text-paper">
+              <li key={step.step} className="flex items-start gap-4 sm:block">
+                <div className="flex shrink-0 items-center gap-3">
+                  <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-ink font-display text-lg font-medium text-paper">
                     {step.step}
                   </span>
                   <span
@@ -258,12 +294,14 @@ export default async function HomePage() {
                     className="hidden h-px flex-1 border-t border-dashed border-ink-faint/50 lg:block"
                   />
                 </div>
-                <h3 className="mt-4 text-[16px] font-extrabold text-ink">
-                  {step.title}
-                </h3>
-                <p className="mt-1.5 text-[14px] leading-relaxed text-ink-soft">
-                  {step.body}
-                </p>
+                <div className="min-w-0 sm:mt-4">
+                  <h3 className="text-[16px] font-bold text-ink">
+                    {step.title}
+                  </h3>
+                  <p className="mt-1 text-[14px] leading-relaxed text-ink-soft">
+                    {step.body}
+                  </p>
+                </div>
               </li>
             ))}
           </ol>
@@ -301,7 +339,7 @@ export default async function HomePage() {
                 </div>
                 <div className={i % 2 === 1 ? "md:order-1" : ""}>
                   <Badge tone="accent">{use.tag}</Badge>
-                  <h3 className="mt-3.5 font-display text-[1.55rem] font-semibold leading-snug tracking-tight text-ink md:text-3xl">
+                  <h3 className="mt-3.5 font-display text-[1.55rem] font-light leading-snug tracking-tight text-ink md:text-3xl">
                     {use.title}
                   </h3>
                   <p className="mt-3 max-w-md text-[15px] leading-relaxed text-ink-soft">
@@ -311,17 +349,88 @@ export default async function HomePage() {
               </article>
             ))}
           </div>
+
+          {/* Purchase beat #2 — right after the story sections */}
+          <div className="mt-12">
+            <BuyBanner
+              eyebrow={BUY_BANDS.mid.eyebrow}
+              title={BUY_BANDS.mid.title}
+              note={BUY_BANDS.mid.note}
+            />
+          </div>
         </Container>
       </Section>
 
-      {/* ============ PRICE / RECEIPT ============ */}
-      <Section className="bg-ink py-16 text-paper md:py-24">
+      {/* ============ SPECS + IN THE BOX — what exactly you get ============ */}
+      <Section id="specs">
+        <Container className="grid gap-11 lg:grid-cols-2 lg:gap-16">
+          <div>
+            <Eyebrow>Verified specifications</Eyebrow>
+            <SectionTitle className="mt-3">The specs, straight up</SectionTitle>
+            <p className="mt-3 max-w-md text-[14.5px] text-ink-soft">
+              Every number below comes from the manufacturer&apos;s published
+              specifications. Figures marked ≈ are approximate.
+            </p>
+            <dl className="mt-7 overflow-hidden rounded-2xl border border-sandline bg-card">
+              {SPECS.map((spec) => (
+                <div
+                  key={spec.label}
+                  className="flex items-baseline justify-between gap-6 border-b border-sandline/60 px-5 py-3.5 last:border-0 odd:bg-cream/40"
+                >
+                  <dt className="shrink-0 text-[13.5px] font-semibold text-ink-faint">
+                    {spec.label}
+                  </dt>
+                  <dd className="text-right text-[14px] font-semibold text-ink">
+                    {spec.value}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          <div id="box">
+            <Eyebrow>What&apos;s in the box</Eyebrow>
+            <SectionTitle className="mt-3">Open it up</SectionTitle>
+            <div className="relative mt-7 aspect-square overflow-hidden rounded-3xl border border-sandline shadow-lift">
+              <Image
+                src="/images/box-contents.jpg"
+                alt="Beevo Go box contents: the printer, USB charging cable, a thermal paper roll and the quick-start guide"
+                fill
+                sizes="(max-width: 768px) 100vw, 540px"
+                className="object-cover"
+                loading="lazy"
+              />
+            </div>
+            <Card className="mt-5 p-6">
+              <ul className="space-y-2.5">
+                {IN_THE_BOX.map((item) => (
+                  <li
+                    key={item}
+                    className="flex items-center gap-3 text-[15px] font-semibold text-ink"
+                  >
+                    <Boxes className="size-4.5 shrink-0 text-accent" aria-hidden />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-4 border-t border-dashed border-sandline pt-3.5 text-[12.5px] leading-relaxed text-ink-faint">
+                Box contents are as supplied by the manufacturer for this batch.
+                If your package ever differs from this list, contact support and
+                we&apos;ll make it right.
+              </p>
+            </Card>
+          </div>
+        </Container>
+      </Section>
+
+      {/* ============ PRICE / RECEIPT — how much it is ============ */}
+      <Section id="pricing" className="bg-ink py-16 text-paper md:py-24">
         <Container className="grid items-center gap-12 lg:grid-cols-2">
           <div className="space-y-5">
             <Eyebrow className="text-paper/60 [&>span]:bg-accent">
               Choose how you pay.
             </Eyebrow>
-            <h2 className="font-display text-[1.9rem] font-semibold leading-tight tracking-tight md:text-4xl">
+            <h2 className="font-display text-[1.9rem] font-light leading-tight tracking-tight md:text-4xl">
               {formatINR(product.priceInPaise)} online. {formatINR(product.codPriceInPaise)} on COD.
             </h2>
             <p className="max-w-md text-[15px] leading-relaxed text-paper/70">
@@ -329,7 +438,7 @@ export default async function HomePage() {
               it suits you. Every price is inclusive of taxes, with free
               doorstep delivery anywhere in India.
             </p>
-            <ul className="space-y-2.5 pt-1 text-sm font-bold text-paper/85">
+            <ul className="space-y-2.5 pt-1 text-sm font-semibold text-paper/85">
               {[
                 "Free shipping to every serviceable pincode",
                 `Pay online: ${formatINR(product.priceInPaise)} · COD: ${formatINR(product.codPriceInPaise)}`,
@@ -388,91 +497,32 @@ export default async function HomePage() {
                 <span className="text-sm font-bold uppercase tracking-wider text-ink-soft">
                   Total
                 </span>
-                <span className="font-display text-3xl font-bold tabular-nums">
+                <span className="font-display text-3xl font-medium tabular-nums">
                   {formatINR(product.priceInPaise + product.shippingInPaise)} online
                 </span>
               </p>
               <Link
                 href="/checkout"
-                className={buttonClasses({ className: "mt-6 w-full", size: "lg" })}
+                className={buttonClasses({ className: "mt-6 w-full", size: "xl" })}
               >
-                <Zap className="size-4.5" aria-hidden />
+                <Zap className="size-5" aria-hidden />
                 Buy online — {formatINR(product.priceInPaise)}
               </Link>
-              <p className="mt-3.5 flex items-center justify-center gap-1.5 text-center text-[12px] font-semibold text-ink-faint">
-                <Lock className="size-3.5" aria-hidden />
-                Secure checkout · COD available
-              </p>
+              {/* Trust sits beside the buy action, not at the bottom of the page */}
+              <ul className="mt-4 flex flex-wrap justify-center gap-x-4 gap-y-1.5">
+                <TrustChip icon={<Lock />}>Secure checkout</TrustChip>
+                <TrustChip icon={<HandCoins />}>COD available</TrustChip>
+                <TrustChip icon={<Undo2 />}>7-day replacement</TrustChip>
+                <TrustChip icon={<Truck />}>Free shipping</TrustChip>
+              </ul>
             </div>
             <div className="receipt-edge" aria-hidden />
           </div>
         </Container>
       </Section>
 
-      {/* ============ SPECS + IN THE BOX ============ */}
-      <Section id="specs">
-        <Container className="grid gap-11 lg:grid-cols-2 lg:gap-16">
-          <div>
-            <Eyebrow>Verified specifications</Eyebrow>
-            <SectionTitle className="mt-3">The specs, straight up</SectionTitle>
-            <p className="mt-3 max-w-md text-[14.5px] text-ink-soft">
-              Every number below comes from the manufacturer&apos;s published
-              specifications. Figures marked ≈ are approximate.
-            </p>
-            <dl className="mt-7 overflow-hidden rounded-2xl border border-sandline bg-card">
-              {SPECS.map((spec) => (
-                <div
-                  key={spec.label}
-                  className="flex items-baseline justify-between gap-6 border-b border-sandline/60 px-5 py-3.5 last:border-0 odd:bg-cream/40"
-                >
-                  <dt className="shrink-0 text-[13.5px] font-bold text-ink-faint">
-                    {spec.label}
-                  </dt>
-                  <dd className="text-right text-[14px] font-bold text-ink">
-                    {spec.value}
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </div>
-
-          <div id="box">
-            <Eyebrow>What&apos;s in the box</Eyebrow>
-            <SectionTitle className="mt-3">Open it up</SectionTitle>
-            <div className="relative mt-7 aspect-square overflow-hidden rounded-3xl border border-sandline shadow-lift">
-              <Image
-                src="/images/box-contents.jpg"
-                alt="Beevo Go box contents: the printer, USB charging cable, a thermal paper roll and the quick-start guide"
-                fill
-                sizes="(max-width: 768px) 100vw, 540px"
-                className="object-cover"
-                loading="lazy"
-              />
-            </div>
-            <Card className="mt-5 p-6">
-              <ul className="space-y-2.5">
-                {IN_THE_BOX.map((item) => (
-                  <li
-                    key={item}
-                    className="flex items-center gap-3 text-[15px] font-bold text-ink"
-                  >
-                    <Boxes className="size-4.5 shrink-0 text-accent" aria-hidden />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-4 border-t border-dashed border-sandline pt-3.5 text-[12.5px] leading-relaxed text-ink-faint">
-                Box contents are as supplied by the manufacturer for this batch.
-                If your package ever differs from this list, contact support and
-                we&apos;ll make it right.
-              </p>
-            </Card>
-          </div>
-        </Container>
-      </Section>
-
-      {/* ============ TRUST ============ */}
-      <Section className="bg-cream/70">
+      {/* ============ TRUST — why trust it (right beside the decision) ============ */}
+      <Section id="trust" className="bg-cream/70">
         <Container>
           <div className="max-w-2xl space-y-3">
             <Eyebrow>Shop with confidence</Eyebrow>
@@ -501,12 +551,15 @@ export default async function HomePage() {
                 body: `Write to ${site.supportEmail} — a person replies within one business day, not a bot loop.`,
               },
             ].map((item) => (
-              <Card key={item.title} className="p-6">
+              <Card
+                key={item.title}
+                className="p-5 transition-shadow hover:shadow-pop md:p-6"
+              >
                 <item.icon className="size-6 text-accent-deep" aria-hidden />
-                <h3 className="mt-3.5 text-[16px] font-extrabold text-ink">
+                <h3 className="mt-3.5 text-[16px] font-bold text-ink">
                   {item.title}
                 </h3>
-                <p className="mt-1.5 text-[13.5px] leading-relaxed text-ink-soft">
+                <p className="mt-1.5 text-[14px] leading-relaxed text-ink-soft">
                   {item.body}
                 </p>
               </Card>
@@ -571,8 +624,8 @@ export default async function HomePage() {
           </div>
           <div className="mt-8 grid gap-4 sm:grid-cols-3">
             {guides.map((guide) => (
-              <Card key={guide.slug} className="flex flex-col p-6">
-                <h3 className="text-[16.5px] font-extrabold leading-snug text-ink">
+              <Card key={guide.slug} className="flex flex-col p-5 md:p-6">
+                <h3 className="text-[16.5px] font-bold leading-snug text-ink">
                   <Link
                     href={`/guides/${guide.slug}`}
                     className="hover:text-accent-deep"
@@ -583,12 +636,24 @@ export default async function HomePage() {
                 <p className="mt-2 flex-1 text-[14px] leading-relaxed text-ink-soft">
                   {guide.summary}
                 </p>
-                <p className="mt-3 text-[12px] font-bold text-ink-faint">
+                <p className="mt-3 text-[12px] font-semibold text-ink-faint">
                   {guide.readMinutes} min read
                 </p>
               </Card>
             ))}
           </div>
+        </Container>
+      </Section>
+
+      {/* ============ CLOSING PURCHASE BAND — why buy now ============ */}
+      <Section id="get-yours" className="pb-20 md:pb-28">
+        <Container>
+          <BuyBanner
+            eyebrow={BUY_BANDS.final.eyebrow}
+            title={BUY_BANDS.final.title}
+            note={BUY_BANDS.final.note}
+            tone="ink"
+          />
         </Container>
       </Section>
 

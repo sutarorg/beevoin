@@ -27,7 +27,7 @@ export function Section({
   className?: string;
 }) {
   return (
-    <section id={id} className={cn("py-14 md:py-20", className)}>
+    <section id={id} className={cn("py-16 md:py-24", className)}>
       {children}
     </section>
   );
@@ -43,7 +43,7 @@ export function Eyebrow({
   return (
     <p
       className={cn(
-        "flex items-center gap-2.5 text-[11px] font-extrabold uppercase tracking-[0.18em] text-ink-faint",
+        "flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-ink-faint",
         className,
       )}
     >
@@ -70,7 +70,7 @@ export function SectionTitle({
   return (
     <Tag
       className={cn(
-        "font-display text-[1.7rem] leading-[1.12] font-semibold tracking-tight text-ink md:text-4xl",
+        "font-display text-[1.75rem] leading-[1.12] font-light tracking-tight text-ink md:text-[2.55rem]",
         className,
       )}
     >
@@ -82,7 +82,7 @@ export function SectionTitle({
 /* ---------- Buttons ---------- */
 
 type ButtonVariant = "primary" | "secondary" | "ghost" | "dark";
-type ButtonSize = "md" | "lg" | "sm";
+type ButtonSize = "md" | "lg" | "sm" | "xl";
 
 export function buttonClasses({
   variant = "primary",
@@ -95,6 +95,7 @@ export function buttonClasses({
 } = {}): string {
   return cn(
     "inline-flex select-none items-center justify-center gap-2 rounded-full font-bold transition-all duration-150 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50",
+    size === "xl" && "min-h-14 px-8 text-[17px]",
     size === "lg" && "min-h-13 px-7 text-base",
     size === "md" && "min-h-11 px-6 text-[15px]",
     size === "sm" && "min-h-9 px-4 text-sm",
@@ -151,7 +152,7 @@ export function TrustChip({
   children: ReactNode;
 }) {
   return (
-    <span className="inline-flex items-center gap-1.5 text-[13px] font-bold text-ink-soft">
+    <span className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-ink-soft">
       <span className="text-leaf [&>svg]:size-4" aria-hidden>
         {icon}
       </span>
