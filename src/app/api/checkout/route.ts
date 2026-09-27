@@ -106,7 +106,7 @@ export async function POST(request: Request) {
         phone: input.phone,
         addressLine1: input.addressLine1,
         addressLine2: input.addressLine2 || undefined,
-        locality: input.locality,
+        locality: input.locality ?? "",
         city: input.city,
         state: input.state,
         pincode: input.pincode,
