@@ -24,6 +24,12 @@ function LogoMark({ className }: { className?: string }) {
   );
 }
 
+const ANNOUNCEMENTS = [
+  "Free shipping across India",
+  "Dispatches in 24–48h",
+  "COD available",
+];
+
 const NAV_LINKS = [
   { href: "/#features", label: "Features" },
   { href: "/#how-it-works", label: "How it works" },
@@ -46,17 +52,44 @@ export function SiteHeader() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-sandline/70 bg-paper/85 shadow-[0_1px_0_rgb(255_255_255/0.7)] backdrop-blur-xl">
-      <div className="overflow-x-auto bg-ink px-4 py-2 text-[12px] font-bold tracking-wide text-paper [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <p className="mx-auto w-max whitespace-nowrap">
-        Free shipping across India
-        <span className="mx-2 text-accent" aria-hidden>
-          •
-        </span>
-        Dispatches in 24–48h
-        <span className="mx-2 text-accent" aria-hidden>
-          •
-        </span>
-        COD available
+      <div className="bg-ink text-[12px] font-bold tracking-wide text-paper">
+        {/* Mobile: the strip is wider than the screen, so it auto-scrolls in
+            a seamless endless loop (duplicated track, -50% translate). */}
+        <div className="marquee py-2 md:hidden">
+          <div
+            className="marquee-track"
+            style={{ animationDuration: "16s" }}
+          >
+            {[0, 1].map((dup) => (
+              <p
+                key={dup}
+                aria-hidden={dup === 1}
+                className="flex shrink-0 items-center whitespace-nowrap"
+              >
+                {ANNOUNCEMENTS.map((item) => (
+                  <span key={item} className="flex items-center">
+                    <span className="px-3">{item}</span>
+                    <span className="text-accent" aria-hidden>
+                      •
+                    </span>
+                  </span>
+                ))}
+              </p>
+            ))}
+          </div>
+        </div>
+        {/* Desktop: everything fits, so it stays static and centred. */}
+        <p className="hidden px-4 py-2 text-center md:block">
+          {ANNOUNCEMENTS.map((item, i) => (
+            <span key={item}>
+              {i > 0 ? (
+                <span className="mx-2 text-accent" aria-hidden>
+                  •
+                </span>
+              ) : null}
+              {item}
+            </span>
+          ))}
         </p>
       </div>
       <div className="mx-auto flex h-16 w-full max-w-[1180px] items-center justify-between gap-3 px-5 sm:px-6 md:px-8">

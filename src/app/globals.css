@@ -131,6 +131,24 @@ a {
     linear-gradient(-45deg, var(--color-ink) 6px, transparent 0) 6px 0 / 12px 12px repeat-x;
 }
 
+/* Decorative receipt barcode — irregular vertical bars, no data encoded */
+.barcode {
+  height: 34px;
+  background-image: repeating-linear-gradient(
+    90deg,
+    var(--color-ink) 0 2px,
+    transparent 2px 4px,
+    var(--color-ink) 4px 7px,
+    transparent 7px 9px,
+    var(--color-ink) 9px 10px,
+    transparent 10px 13px,
+    var(--color-ink) 13px 15px,
+    transparent 15px 16px,
+    var(--color-ink) 16px 17px,
+    transparent 17px 20px
+  );
+}
+
 /* ---- Marquee (spec ticker) ---- */
 .marquee {
   overflow: hidden;

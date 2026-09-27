@@ -190,24 +190,6 @@ export default async function HomePage() {
             <p className="max-w-xl text-base leading-relaxed text-ink-soft md:text-lg">
               {HERO.subtitle}
             </p>
-            <div className="grid max-w-xl gap-2.5 sm:grid-cols-3">
-              {[
-                { icon: Smartphone, label: "iPhone & Android" },
-                { icon: BadgeCheck, label: "No ink refills" },
-                { icon: Truck, label: "Free India shipping" },
-              ].map((item) => (
-                <div
-                  key={item.label}
-                  className="flex items-center justify-center rounded-2xl border border-sandline/70 bg-white/70 p-3 text-ink shadow-lift backdrop-blur"
-                  aria-label={item.label}
-                  title={item.label}
-                >
-                  <span className="flex size-9 items-center justify-center rounded-full bg-accent-soft text-accent-deep">
-                    <item.icon className="size-5" aria-hidden />
-                  </span>
-                </div>
-              ))}
-            </div>
             <BuyBox />
           </div>
           <div className="order-1 min-w-0 lg:order-2">
@@ -514,70 +496,135 @@ export default async function HomePage() {
           </div>
 
           <div className="mx-auto w-full max-w-md">
-            <div className="fade-up rounded-t-[2rem] bg-white px-7 pb-8 pt-7 font-mono text-ink shadow-pop">
-              <p className="text-center text-xs font-bold uppercase tracking-[0.22em] text-ink-faint">
-                Beevo · Order preview
-              </p>
-              <div className="dashed-rule my-5" />
-              <div className="space-y-2.5 text-[15px]">
-                <p className="flex justify-between gap-4">
-                  <span>
-                    {product.shortName} × 1<span className="block text-xs text-ink-faint">Ink-free pocket printer</span>
-                  </span>
-                  <span className="font-bold tabular-nums">
-                    {formatINR(product.priceInPaise)} online
-                  </span>
+            <div className="fade-up overflow-hidden rounded-t-[2rem] bg-white font-mono text-ink shadow-pop">
+              {/* Receipt header — store mark + dispatch promise, styled like
+                  the top of a till receipt instead of a bare caption. */}
+              <div className="flex items-center justify-between gap-3 border-b border-dashed border-sandline bg-cream/60 px-6 py-4 sm:px-7">
+                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-ink">
+                  Beevo · Order preview
                 </p>
-                <p className="flex justify-between gap-4">
-                  <span>Shipping</span>
-                  <span
-                    className={
-                      product.shippingInPaise === 0
-                        ? "font-bold text-leaf"
-                        : "font-bold tabular-nums"
-                    }
-                  >
-                    {product.shippingInPaise === 0
-                      ? "FREE"
-                      : formatINR(product.shippingInPaise)}
-                  </span>
-                </p>
-                <p className="flex justify-between gap-4 text-[13px] text-ink-faint">
-                  <span>GST</span>
-                  <span>Included in price</span>
-                </p>
+                <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-leaf-soft px-2.5 py-1 text-[11px] font-bold text-leaf">
+                  <Truck className="size-3.5" aria-hidden />
+                  Ships in 24–48h
+                </span>
               </div>
-              <div className="dashed-rule my-5" />
-              <p className="flex items-baseline justify-between">
-                <span className="text-sm font-bold uppercase tracking-wider text-ink-soft">
-                  Total
-                </span>
-                <span className="font-display text-3xl font-bold tabular-nums">
-                  {formatINR(product.priceInPaise + product.shippingInPaise)} online
-                </span>
-              </p>
-              <Link
-                href="/checkout"
-                className={buttonClasses({ className: "mt-6 w-full", size: "lg" })}
-              >
-                <Zap className="size-4.5" aria-hidden />
-                Order Now
-              </Link>
-              <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[12px] font-semibold text-ink-soft">
-                <Lock className="size-3.5 shrink-0 text-leaf" aria-hidden />
-                Secure checkout
-              </p>
-              {/* Payment-method reassurance — names the rails Indian buyers
-                  look for instead of making them click to find out. */}
-              <div className="mt-2.5 flex flex-wrap items-center justify-center gap-1.5">
-                {["UPI", "Cards", "Netbanking", "Wallets", "COD"].map((method) => (
-                  <span
-                    key={method}
-                    className="rounded-md border border-sandline bg-cream px-2.5 py-1 font-mono text-[11px] font-bold text-ink-soft"
-                  >
-                    {method}
+
+              <div className="px-6 pb-8 pt-6 sm:px-7">
+                {/* Line item — thumbnail + name so the receipt reads like a
+                    real order, not an abstract price list. */}
+                <div className="flex items-center gap-3.5">
+                  <span className="relative block size-14 shrink-0 overflow-hidden rounded-xl border border-sandline bg-cream">
+                    <Image
+                      src={product.images[0]?.src ?? "/images/product-1.jpg"}
+                      alt=""
+                      fill
+                      sizes="56px"
+                      className="object-cover"
+                    />
                   </span>
-                ))}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[15px] font-bold">
+                      {product.shortName}
+                    </span>
+                    <span className="mt-0.5 block text-xs text-ink-faint">
+                      Ink-free pocket printer · Qty 1
+                    </span>
+                  </span>
+                  <span className="shrink-0 text-[15px] font-bold tabular-nums">
+                    {formatINR(product.priceInPaise)}
+                  </span>
+                </div>
+
+                <div className="dashed-rule my-5" />
+
+                <div className="space-y-2.5 text-[14.5px]">
+                  <p className="flex items-baseline justify-between gap-4">
+                    <span className="text-ink-soft">Subtotal (online price)</span>
+                    <span className="font-bold tabular-nums">
+                      {formatINR(product.priceInPaise)}
+                    </span>
+                  </p>
+                  <p className="flex items-baseline justify-between gap-4">
+                    <span className="text-ink-soft">Shipping — all of India</span>
+                    <span
+                      className={
+                        product.shippingInPaise === 0
+                          ? "font-bold text-leaf"
+                          : "font-bold tabular-nums"
+                      }
+                    >
+                      {product.shippingInPaise === 0
+                        ? "FREE"
+                        : formatINR(product.shippingInPaise)}
+                    </span>
+                  </p>
+                  <p className="flex items-baseline justify-between gap-4 text-[13px] text-ink-faint">
+                    <span>GST</span>
+                    <span>Included in price</span>
+                  </p>
+                </div>
+
+                <div className="dashed-rule my-5" />
+
+                <div className="flex items-baseline justify-between gap-4">
+                  <span className="text-sm font-bold uppercase tracking-wider text-ink-soft">
+                    Total
+                  </span>
+                  <span className="text-right">
+                    <span className="block font-display text-3xl font-bold tabular-nums">
+                      {formatINR(product.priceInPaise + product.shippingInPaise)}
+                    </span>
+                    <span className="mt-0.5 block text-[11px] font-bold uppercase tracking-wide text-ink-faint">
+                      when you pay online
+                    </span>
+                  </span>
+                </div>
+
+                {/* Prepaid-vs-COD, spelled out where the decision happens. */}
+                {product.codPriceInPaise > product.priceInPaise ? (
+                  <p className="mt-4 flex items-center justify-between gap-3 rounded-xl bg-leaf-soft px-3.5 py-2.5 text-[12.5px] font-bold text-leaf">
+                    <span>
+                      You save{" "}
+                      {formatINR(product.codPriceInPaise - product.priceInPaise)}{" "}
+                      vs COD
+                    </span>
+                    <span className="text-right font-semibold text-leaf/80">
+                      COD: {formatINR(product.codPriceInPaise)} at the door
+                    </span>
+                  </p>
+                ) : null}
+
+                <Link
+                  href="/checkout"
+                  className={buttonClasses({ className: "mt-6 w-full", size: "lg" })}
+                >
+                  <Zap className="size-4.5" aria-hidden />
+                  Order Now — {formatINR(product.priceInPaise + product.shippingInPaise)}
+                </Link>
+                <p className="mt-4 flex items-center justify-center gap-1.5 text-center text-[12px] font-semibold text-ink-soft">
+                  <Lock className="size-3.5 shrink-0 text-leaf" aria-hidden />
+                  Secure checkout · 7-day replacement
+                </p>
+                {/* Payment-method reassurance — names the rails Indian buyers
+                    look for instead of making them click to find out. */}
+                <div className="mt-2.5 flex flex-wrap items-center justify-center gap-1.5">
+                  {["UPI", "Cards", "Netbanking", "Wallets", "COD"].map((method) => (
+                    <span
+                      key={method}
+                      className="rounded-md border border-sandline bg-cream px-2.5 py-1 font-mono text-[11px] font-bold text-ink-soft"
+                    >
+                      {method}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Barcode footer — pure receipt garnish, screen-reader silent. */}
+                <div className="mt-6" aria-hidden>
+                  <div className="barcode mx-auto w-44 opacity-85" />
+                  <p className="mt-1.5 text-center text-[10px] font-bold uppercase tracking-[0.3em] text-ink-faint">
+                    {product.sku || "BEEVO-GO"}
+                  </p>
+                </div>
               </div>
             </div>
             <div className="receipt-edge drop-shadow-[0_12px_12px_rgba(0,0,0,0.28)]" aria-hidden />
