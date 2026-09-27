@@ -436,8 +436,12 @@ export default async function AdminOrderDetailPage({
                   <br />
                 </>
               ) : null}
-              {order.locality}
-              <br />
+              {order.locality ? (
+                <>
+                  {order.locality}
+                  <br />
+                </>
+              ) : null}
               {order.city}, {order.state} {order.pincode}
             </address>
           </Panel>

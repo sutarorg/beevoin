@@ -44,7 +44,7 @@ export type CheckoutCustomer = {
   phone: string;
   addressLine1: string;
   addressLine2?: string;
-  locality: string;
+  locality?: string;
   city: string;
   state: string;
   pincode: string;
@@ -125,7 +125,7 @@ export async function createOrder(input: {
             phone: customer.phone,
             addressLine1: customer.addressLine1,
             addressLine2: customer.addressLine2 || null,
-            locality: customer.locality,
+            locality: customer.locality ?? "",
             city: customer.city,
             state: customer.state,
             pincode: customer.pincode,

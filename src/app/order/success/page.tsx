@@ -164,7 +164,7 @@ export default async function OrderSuccessPage({
               <p className="mt-1 text-[14px] leading-relaxed text-ink-soft">
                 {order.addressLine1}
                 {order.addressLine2 ? `, ${order.addressLine2}` : ""},{" "}
-                {order.locality}, {order.city}, {order.state} — {order.pincode}
+                {order.locality ? `${order.locality}, ` : ""}{order.city}, {order.state} — {order.pincode}
               </p>
               <p className="mt-1 text-[14px] font-semibold text-ink-soft">
                 +91 {order.phone}

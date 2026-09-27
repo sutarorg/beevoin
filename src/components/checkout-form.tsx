@@ -45,7 +45,6 @@ type FormValues = {
   phone: string;
   addressLine1: string;
   addressLine2: string;
-  locality: string;
   city: string;
   state: string;
   pincode: string;
@@ -57,7 +56,6 @@ const EMPTY: FormValues = {
   phone: "",
   addressLine1: "",
   addressLine2: "",
-  locality: "",
   city: "",
   state: "",
   pincode: "",
@@ -389,14 +387,6 @@ export function CheckoutForm({
                       />
                     </Field>
                   </div>
-                  <Field label="Area / Locality" htmlFor="f-locality" error={errors.locality}>
-                    <input
-                      {...input("locality")}
-                      type="text"
-                      autoComplete="address-level3"
-                      placeholder="e.g. Indiranagar"
-                    />
-                  </Field>
                   <Field label="City" htmlFor="f-city" error={errors.city}>
                     <input
                       {...input("city")}

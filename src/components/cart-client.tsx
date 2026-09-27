@@ -151,7 +151,7 @@ export function CartClient() {
                   <dt className="font-semibold text-ink-soft">Beevo Go</dt>
                   <dd className="text-right font-mono font-bold tabular-nums">
                     {formatINR(subtotalInPaise)}
-                    <span className="ml-1 font-sans text-[11px] font-semibold text-leaf">{formatINR(product.priceInPaise)} each</span>
+                    <span className="ml-1 font-sans text-[11px] font-semibold text-leaf">each</span>
                   </dd>
                 </div>
                 <div className="flex justify-between">
@@ -187,7 +187,7 @@ export function CartClient() {
               <div className="mt-4 grid grid-cols-2 gap-2.5 text-[12px] font-bold leading-snug text-ink-soft sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-5">
                 <span className="inline-flex items-center gap-1.5">
                   <Truck className="size-4 text-leaf" aria-hidden />
-                  {policies.deliveryEstimate}
+                  3–7 business days
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <HandCoins className="size-4 text-leaf" aria-hidden />

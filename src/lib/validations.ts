@@ -75,7 +75,7 @@ const checkoutBase = {
     .min(4, "Enter your house/flat number and street")
     .max(140),
   addressLine2: z.string().trim().max(140).optional().or(z.literal("")),
-  locality: z.string().trim().min(2, "Enter your area or locality").max(100),
+  locality: z.string().trim().max(100).optional().or(z.literal("")),
   city: z.string().trim().min(2, "Enter your city").max(80),
   state: z.enum(INDIAN_STATES, {
     message: "Select your state",

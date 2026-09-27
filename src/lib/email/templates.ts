@@ -77,7 +77,7 @@ function orderSummary(order: Order): string {
 </table>
 <p style="margin:0 0 4px;font-family:Arial,sans-serif;font-size:13px;color:#8A8172;">Delivering to</p>
 <p style="margin:0 0 14px;font-family:Arial,sans-serif;font-size:14px;line-height:1.55;color:${INK};">
-  ${e(order.customerName)}<br>${e(order.addressLine1)}${order.addressLine2 ? `<br>${e(order.addressLine2)}` : ""}<br>${e(order.locality)}, ${e(order.city)}<br>${e(order.state)} — ${e(order.pincode)}<br>Mobile: ${e(order.phone)}
+  ${e(order.customerName)}<br>${e(order.addressLine1)}${order.addressLine2 ? `<br>${e(order.addressLine2)}` : ""}<br>${order.locality ? `${e(order.locality)}, ` : ""}${e(order.city)}<br>${e(order.state)} — ${e(order.pincode)}<br>Mobile: ${e(order.phone)}
 </p>
 <p style="margin:0 0 6px;font-family:Arial,sans-serif;font-size:14px;line-height:1.55;color:${INK};">${payLine}</p>
 <p style="margin:0;font-family:Arial,sans-serif;font-size:13px;color:#8A8172;">Estimated delivery: ${policies.deliveryEstimate} after dispatch.</p>`;
