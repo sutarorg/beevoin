@@ -78,16 +78,7 @@ export function SiteFooter() {
             © {new Date().getFullYear()} {site.legalName}. All prices include
             GST.
           </p>
-          <p className="flex items-center gap-4">
-            <span>Made for little prints in India</span>
-            <Link
-              href="/admin"
-              className="font-semibold hover:text-ink"
-              aria-label="Store admin"
-            >
-              Store admin
-            </Link>
-          </p>
+          <p>Made for little prints in India</p>
         </div>
       </Container>
     </footer>
