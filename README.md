@@ -345,7 +345,7 @@ Migrations live in `drizzle/` as plain SQL and are applied in order by `scripts/
 - `0002_cod_pricing_and_phone_verification.sql` adds the COD price used by checkout and the admin product pages.
 - `0003_remove_cod_otp.sql` removes the retired OTP table after the COD flow was simplified.
 
-**Vercel Production deployments apply pending migrations before building** (`vercel.json` runs `npm run db:migrate` when `VERCEL_ENV=production`, then builds). Make sure the Production environment has `DATABASE_URL` or `POSTGRES_URL` configured. Preview builds skip the migration so they cannot accidentally mutate production data. This prevents a production deploy from serving code that expects a database column or table that has not been applied yet. The command is idempotent, so local development can still use `npm run build` directly.
+**Apply pending migrations as a separate release step before deploying production.** Vercel builds only run `npm run build`; they deliberately do not mutate the database. Build workers may not have database network access or DDL privileges, and tying migrations to the build can prevent an otherwise valid deployment. Run `npm run db:migrate` from a trusted environment with `DATABASE_URL` or `POSTGRES_URL` configured, then deploy. Preview builds never run migrations, so they cannot accidentally mutate production data.
 
 Upgrading a live database from an older Beevo:
 
@@ -452,11 +452,12 @@ The region is already pinned to Mumbai (`bom1`) in `vercel.json`, which keeps la
 
 ### 11.3 After the first deploy
 
-1. **Seed the baseline product and settings** against your production database. Migrations already ran as part of the Vercel build; from your machine, with production `DATABASE_URL` exported:
+1. **Migrate and seed the baseline product and settings** against your production database. From a trusted environment with the production `DATABASE_URL` exported (ideally before the first deploy), run:
    ```bash
+   DATABASE_URL="postgres://…prod…" npm run db:migrate
    DATABASE_URL="postgres://…prod…" npm run db:seed
    ```
-   If you are applying a migration manually outside Vercel, run `DATABASE_URL="postgres://…prod…" npm run db:migrate` first.
+   Repeat the migration command before later production deploys whenever new migration files are added.
 2. **Link your first admin** with the SQL in [section 6.5](#65-link-them-as-the-store-owner).
 3. **Set `NEXT_PUBLIC_SITE_URL`** to the real production origin and redeploy (it is baked into the client bundle at build time).
 4. **Create the Razorpay live webhook** pointing at `https://yourstore.in/api/webhooks/razorpay`.
