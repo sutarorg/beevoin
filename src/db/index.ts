@@ -11,11 +11,16 @@ import * as schema from "./schema";
 /**
  * Environment-adaptive database client.
  *
- * - On Vercel with a Neon / Vercel Postgres endpoint (POSTGRES_URL) we use
- *   Neon's serverless driver (WebSockets), which behaves correctly across
- *   short-lived serverless invocations.
- * - Everywhere else (local dev, classic VPS, Supabase/RDS URLs) we use the
+ * - Neon / Vercel Postgres endpoints use Neon's serverless driver
+ *   (WebSockets), which behaves correctly across short-lived invocations.
+ * - Everywhere else (local dev, classic VPS, Supabase/RDS URLs) uses the
  *   standard node-postgres TCP pool.
+ *
+ * DATABASE_URL is the documented, canonical setting and deliberately wins
+ * when both variables exist. Vercel integrations can leave a stale
+ * POSTGRES_URL behind after a database is replaced; preferring that stale URL
+ * makes the whole storefront and admin panel fail even when DATABASE_URL is
+ * valid.
  *
  * The client is created lazily behind a Proxy so merely importing this module
  * during a production build never touches the network or requires env vars.
@@ -36,10 +41,10 @@ export type Transaction = Parameters<
 export type Db = Database | Transaction;
 
 function connectionUrl(): string {
-  const url = process.env.POSTGRES_URL ?? process.env.DATABASE_URL;
+  const url = process.env.DATABASE_URL ?? process.env.POSTGRES_URL;
   if (!url) {
     throw new Error(
-      "No database URL configured. Set POSTGRES_URL (Vercel/Neon) or DATABASE_URL.",
+      "No database URL configured. Set DATABASE_URL or POSTGRES_URL (Vercel/Neon).",
     );
   }
   return url;
@@ -54,12 +59,9 @@ function isNeonEndpoint(url: string): boolean {
 }
 
 function shouldUseServerlessDriver(url: string): boolean {
-  // Explicit Neon endpoints always get the serverless driver; on Vercel,
-  // POSTGRES_URL (the Vercel Postgres / Neon integration) implies it too.
-  return (
-    isNeonEndpoint(url) ||
-    (process.env.VERCEL === "1" && Boolean(process.env.POSTGRES_URL))
-  );
+  // Select the driver from the URL actually chosen above, not merely from the
+  // presence of some other environment variable.
+  return isNeonEndpoint(url);
 }
 
 function createClient(): Database {

@@ -34,7 +34,12 @@ export type AdminAuthResult =
   | { ok: true; actor: AdminActor }
   | {
       ok: false;
-      reason: "unconfigured" | "unauthenticated" | "not_admin" | "suspended";
+      reason:
+        | "unconfigured"
+        | "unauthenticated"
+        | "not_admin"
+        | "suspended"
+        | "database_unavailable";
     };
 
 /**
@@ -74,11 +79,17 @@ export const getAdminAuth = cache(async function getAdminAuth(): Promise<AdminAu
 
   if (!supabaseUserId) return { ok: false, reason: "unauthenticated" };
 
-  const [record] = await db
-    .select()
-    .from(adminUsers)
-    .where(eq(adminUsers.supabaseUserId, supabaseUserId))
-    .limit(1);
+  let record: typeof adminUsers.$inferSelect | undefined;
+  try {
+    [record] = await db
+      .select()
+      .from(adminUsers)
+      .where(eq(adminUsers.supabaseUserId, supabaseUserId))
+      .limit(1);
+  } catch {
+    logEvent("admin_access_failed", { reason: "database_unavailable" });
+    return { ok: false, reason: "database_unavailable" };
+  }
 
   if (!record) {
     logEvent("admin_access_denied", { reason: "not_in_admin_users" });
@@ -152,8 +163,14 @@ export async function authorize(permission: Permission): Promise<AdminActor> {
     throw new AdminAuthError(
       result.reason === "suspended"
         ? "This admin account is suspended."
-        : "You are not signed in as an administrator.",
-      result.reason === "unauthenticated" ? 401 : 403,
+        : result.reason === "database_unavailable"
+          ? "The admin service is temporarily unavailable."
+          : "You are not signed in as an administrator.",
+      result.reason === "unauthenticated"
+        ? 401
+        : result.reason === "database_unavailable"
+          ? 503
+          : 403,
     );
   }
   if (!roleHasPermission(result.actor.role, permission)) {

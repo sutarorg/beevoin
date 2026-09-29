@@ -70,11 +70,25 @@ export async function signInAction(
     return { ok: false, message: "Invalid email or password." };
   }
 
-  const [record] = await db
-    .select()
-    .from(adminUsers)
-    .where(eq(adminUsers.supabaseUserId, data.user.id))
-    .limit(1);
+  let record: typeof adminUsers.$inferSelect | undefined;
+  try {
+    [record] = await db
+      .select()
+      .from(adminUsers)
+      .where(eq(adminUsers.supabaseUserId, data.user.id))
+      .limit(1);
+  } catch {
+    // Supabase authentication succeeded, but authorization cannot be decided
+    // safely while PostgreSQL is unavailable. End the new session rather than
+    // leaving a half-signed-in cookie or surfacing an opaque Server Action 500.
+    await supabase.auth.signOut();
+    logEvent("admin_login_failed", { reason: "database_unavailable" });
+    return {
+      ok: false,
+      message:
+        "The admin service is temporarily unavailable. Please try again shortly.",
+    };
+  }
 
   if (!record || record.status !== "active") {
     // Authenticated with Supabase but not an active Beevo admin — end the

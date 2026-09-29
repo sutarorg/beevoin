@@ -20,6 +20,10 @@ const REASONS: Record<string, { title: string; body: string }> = {
     title: "This admin account is suspended",
     body: "Your access has been suspended by the store owner. Existing sessions cannot perform any admin action while suspended.",
   },
+  database_unavailable: {
+    title: "Admin service temporarily unavailable",
+    body: "Beevo could not reach its database, so your admin access could not be verified safely. Please try again shortly. If the problem continues, check the production database connection.",
+  },
   role: {
     title: "Your role cannot open this page",
     body: "You are an active admin, but this page is restricted to other roles.",
